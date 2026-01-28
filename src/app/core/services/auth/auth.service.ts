@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
-import { catchError, tap, map } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import {
   User,
   UserRole,
@@ -21,7 +21,7 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly storage = inject(StorageService);
 
-  private readonly apiUrl = 'https://api.example.com/auth';
+  private readonly apiUrl = 'https://localhost:8000/api';
 
   currentUser = signal<User | null>(null);
   isAuthenticated = signal<boolean>(false);
