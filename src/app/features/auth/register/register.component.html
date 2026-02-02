@@ -1,0 +1,222 @@
+<div class="register-container">
+  <div class="register-card-wrapper">
+    <mat-card class="register-card">
+      <mat-card-header>
+        <div class="logo-section">
+          <div class="logo-icon">
+            <mat-icon>restaurant</mat-icon>
+          </div>
+          <h1 class="app-title">HomeMeals</h1>
+        </div>
+        <h2 class="register-title">Create Account</h2>
+        <p class="register-subtitle">Join our community of food lovers</p>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+          
+          <!-- Role Selection -->
+          <div class="role-selection">
+            <label class="section-label">I want to join as:</label>
+            <div class="role-cards">
+              @for (role of userRoles; track role.value) {
+                <div 
+                  class="role-card"
+                  [class.selected]="registerForm.get('role')?.value === role.value"
+                  (click)="registerForm.patchValue({ role: role.value })"
+                >
+                  <mat-icon>{{ role.icon }}</mat-icon>
+                  <h3>{{ role.label }}</h3>
+                  <p>{{ role.description }}</p>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Name Fields -->
+          <div class="name-row">
+            <mat-form-field appearance="outline" class="half-width">
+              <mat-label>First Name</mat-label>
+              <input 
+                matInput 
+                type="text" 
+                formControlName="firstName"
+                placeholder="John"
+                autocomplete="given-name"
+              >
+              <mat-icon matPrefix>person</mat-icon>
+              @if (hasError('firstName')) {
+                <mat-error>{{ getErrorMessage('firstName') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="half-width">
+              <mat-label>Last Name</mat-label>
+              <input 
+                matInput 
+                type="text" 
+                formControlName="lastName"
+                placeholder="Doe"
+                autocomplete="family-name"
+              >
+              @if (hasError('lastName')) {
+                <mat-error>{{ getErrorMessage('lastName') }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <!-- Email Field -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email Address</mat-label>
+            <input 
+              matInput 
+              type="email" 
+              formControlName="email"
+              placeholder="your@email.com"
+              autocomplete="email"
+            >
+            <mat-icon matPrefix>email</mat-icon>
+            @if (hasError('email')) {
+              <mat-error>{{ getErrorMessage('email') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Phone Field -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Phone Number (Optional)</mat-label>
+            <input 
+              matInput 
+              type="tel" 
+              formControlName="phone"
+              placeholder="+254712345678"
+              autocomplete="tel"
+            >
+            <mat-icon matPrefix>phone</mat-icon>
+            @if (hasError('phone')) {
+              <mat-error>{{ getErrorMessage('phone') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Password Field -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input 
+              matInput 
+              [type]="hidePassword() ? 'password' : 'text'"
+              formControlName="password"
+              placeholder="Create a strong password"
+              autocomplete="new-password"
+            >
+            <mat-icon matPrefix>lock</mat-icon>
+            <button 
+              mat-icon-button 
+              matSuffix 
+              type="button"
+              (click)="togglePasswordVisibility('password')"
+              [attr.aria-label]="'Toggle password visibility'"
+            >
+              <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (hasError('password')) {
+              <mat-error>{{ getErrorMessage('password') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Password Strength Indicator -->
+          @if (registerForm.get('password')?.value) {
+            <div class="password-strength">
+              <div class="strength-label">
+                Password strength: 
+                <span [class]="'strength-' + getPasswordStrength().level">
+                  {{ getPasswordStrength().label }}
+                </span>
+              </div>
+              <div class="strength-bar">
+                @for (item of [1, 2, 3, 4]; track item) {
+                  <div 
+                    class="strength-segment"
+                    [class.active]="item <= getPasswordStrength().level"
+                    [class.weak]="getPasswordStrength().level === 1"
+                    [class.fair]="getPasswordStrength().level === 2"
+                    [class.good]="getPasswordStrength().level === 3"
+                    [class.strong]="getPasswordStrength().level === 4"
+                  ></div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Confirm Password Field -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Confirm Password</mat-label>
+            <input 
+              matInput 
+              [type]="hideConfirmPassword() ? 'password' : 'text'"
+              formControlName="confirmPassword"
+              placeholder="Re-enter your password"
+              autocomplete="new-password"
+            >
+            <mat-icon matPrefix>lock</mat-icon>
+            <button 
+              mat-icon-button 
+              matSuffix 
+              type="button"
+              (click)="togglePasswordVisibility('confirmPassword')"
+              [attr.aria-label]="'Toggle confirm password visibility'"
+            >
+              <mat-icon>{{ hideConfirmPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (hasError('confirmPassword') || registerForm.hasError('passwordMismatch')) {
+              <mat-error>{{ getErrorMessage('confirmPassword') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Terms & Conditions -->
+          <div class="terms-section">
+            <mat-checkbox formControlName="acceptTerms" color="primary">
+              I agree to the 
+              <a href="/terms" target="_blank">Terms & Conditions</a> 
+              and 
+              <a href="/privacy" target="_blank">Privacy Policy</a>
+            </mat-checkbox>
+            @if (registerForm.get('acceptTerms')?.touched && registerForm.get('acceptTerms')?.invalid) {
+              <mat-error class="terms-error">
+                You must accept the terms and conditions
+              </mat-error>
+            }
+          </div>
+
+          <!-- Submit Button -->
+          <button 
+            mat-raised-button 
+            color="primary" 
+            type="submit"
+            class="submit-button full-width"
+            [disabled]="isLoading() || registerForm.invalid"
+          >
+            @if (isLoading()) {
+              <mat-spinner diameter="24" class="button-spinner"></mat-spinner>
+              <span>Creating account...</span>
+            } @else {
+              <span>Create Account</span>
+            }
+          </button>
+
+          <!-- Login Link -->
+          <div class="login-section">
+            <p class="login-text">
+              Already have an account?
+              <a 
+                class="login-link" 
+                (click)="navigateToLogin()"
+                tabindex="0"
+              >
+                Sign in
+              </a>
+            </p>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
