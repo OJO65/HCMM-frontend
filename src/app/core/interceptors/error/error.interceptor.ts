@@ -4,11 +4,11 @@ import {
   HttpHandlerFn,
   HttpEvent,
   HttpErrorResponse,
-  HttpEventType
+  HttpEventType,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Observable, throwError, timer } from 'rxjs';
-import { catchError, retry, tap } from 'rxjs/operators';
+import { catchError, mergeMap, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 
@@ -29,7 +29,7 @@ const DEFAULT_CONFIG: ErrorInterceptorConfig = {
   showToast: true,
   logErrors: true,
   redirectOn403: true,
-  clearAuthOn401: true
+  clearAuthOn401: true,
 };
 
 /**
@@ -46,7 +46,7 @@ export interface EnhancedError {
 
 /**
  * Production-grade HTTP Error Interceptor
- * 
+ *
  * Features:
  * - Comprehensive error handling for all HTTP status codes
  * - User-friendly toast notifications
@@ -55,36 +55,36 @@ export interface EnhancedError {
  * - Detailed error logging
  * - 401/403 navigation handling
  * - Configurable behavior
- * 
+ *
  * @param req - The HTTP request
  * @param next - The next handler in the chain
  * @returns Observable of HTTP events
  */
 export const errorInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
-  next: HttpHandlerFn
+  next: HttpHandlerFn,
 ): Observable<HttpEvent<unknown>> => {
   const router = inject(Router);
   const toastr = inject(ToastrService);
-  
+
   // Check for custom configuration in request headers
   const config = extractConfig(req);
-  
+
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       const enhancedError = createEnhancedError(error, req);
-      
+
       // Log error if configured
       if (config.logErrors) {
         logError(enhancedError);
       }
-      
+
       // Handle the error based on status code
       handleHttpError(error, req, router, toastr, config);
-      
+
       // Return enhanced error for component-level handling
       return throwError(() => enhancedError);
-    })
+    }),
   );
 };
 
@@ -94,13 +94,13 @@ export const errorInterceptor: HttpInterceptorFn = (
  */
 export const loggingInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
-  next: HttpHandlerFn
+  next: HttpHandlerFn,
 ): Observable<HttpEvent<unknown>> => {
   const startTime = Date.now();
   let requestLogged = false;
-  
+
   return next(req).pipe(
-    tap(event => {
+    tap((event) => {
       // Log request once
       if (!requestLogged) {
         console.log(`📤 ${req.method} ${req.url}`);
@@ -109,7 +109,7 @@ export const loggingInterceptor: HttpInterceptorFn = (
         }
         requestLogged = true;
       }
-      
+
       // Log successful response
       if (event.type === HttpEventType.Response) {
         const elapsed = Date.now() - startTime;
@@ -117,11 +117,14 @@ export const loggingInterceptor: HttpInterceptorFn = (
         console.log('Response:', event.status, event.statusText);
       }
     }),
-    catchError(error => {
+    catchError((error) => {
       const elapsed = Date.now() - startTime;
-      console.error(`❌ ${req.method} ${req.url} failed after ${elapsed}ms`, error);
+      console.error(
+        `❌ ${req.method} ${req.url} failed after ${elapsed}ms`,
+        error,
+      );
       return throwError(() => error);
-    })
+    }),
   );
 };
 
@@ -131,55 +134,53 @@ export const loggingInterceptor: HttpInterceptorFn = (
  */
 export const retryInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
-  next: HttpHandlerFn
+  next: HttpHandlerFn,
 ): Observable<HttpEvent<unknown>> => {
-  // Only retry GET requests
-  if (req.method !== 'GET') {
-    return next(req);
-  }
-  
-  // Check if retry is disabled for this request
-  if (req.headers.has('X-Skip-Retry')) {
-    return next(req);
-  }
-  
-  const maxRetries = 3;
-  const initialDelay = 1000; // 1 second
-  
-  return next(req).pipe(
-    retry({
-      count: maxRetries,
-      delay: (error: HttpErrorResponse, retryCount: number) => {
-        // Only retry on network errors (status 0) or server errors (5xx)
-        if (error.status === 0 || error.status >= 500) {
-          // Exponential backoff: 1s, 2s, 4s
-          const delayMs = Math.pow(2, retryCount - 1) * initialDelay;
-          console.log(`🔄 Retry attempt ${retryCount}/${maxRetries} after ${delayMs}ms delay`);
-          return timer(delayMs);
-        }
-        
-        // Don't retry for other errors
-        throw error;
-      },
-      resetOnSuccess: true
-    })
-  );
-};
+  if (req.method !== 'GET') return next(req);
+  if (req.headers.has('X-Skip-Retry')) return next(req);
 
+  const maxRetries = 3;
+  const initialDelay = 1000;
+
+  let attempt = 0;
+
+  const handleRequest = (): Observable<HttpEvent<unknown>> =>
+    next(req).pipe(
+      catchError((error: HttpErrorResponse) => {
+        const retryAttempt = attempt + 1;
+        const shouldRetry =
+          retryAttempt <= maxRetries &&
+          (error.status === 0 || error.status >= 500);
+
+        if (!shouldRetry) {
+          return throwError(() => error);
+        }
+
+        attempt++;
+
+        const delayMs = Math.pow(2, retryAttempt - 1) * initialDelay;
+        console.log(`🔄 Retry attempt ${retryAttempt}/${maxRetries} after ${delayMs}ms`);
+
+        return timer(delayMs).pipe(mergeMap(() => handleRequest()));
+      }),
+    );
+
+  return handleRequest();
+};
 /**
  * Extract configuration from request headers
  */
 function extractConfig(req: HttpRequest<unknown>): ErrorInterceptorConfig {
   const config = { ...DEFAULT_CONFIG };
-  
+
   if (req.headers.has('X-No-Toast')) {
     config.showToast = false;
   }
-  
+
   if (req.headers.has('X-No-Error-Log')) {
     config.logErrors = false;
   }
-  
+
   return config;
 }
 
@@ -188,7 +189,7 @@ function extractConfig(req: HttpRequest<unknown>): ErrorInterceptorConfig {
  */
 function createEnhancedError(
   error: HttpErrorResponse,
-  req: HttpRequest<unknown>
+  req: HttpRequest<unknown>,
 ): EnhancedError {
   return {
     status: error.status,
@@ -196,7 +197,7 @@ function createEnhancedError(
     timestamp: Date.now(),
     url: req.url,
     method: req.method,
-    error: error.error
+    error: error.error,
   };
 }
 
@@ -208,7 +209,7 @@ function extractErrorMessage(error: HttpErrorResponse): string {
     // Client-side or network error
     return `Network Error: ${error.error.message}`;
   }
-  
+
   // Server-side error
   switch (error.status) {
     case 0:
@@ -218,11 +219,17 @@ function extractErrorMessage(error: HttpErrorResponse): string {
     case 401:
       return error.error?.message || 'Unauthorized. Please login again.';
     case 403:
-      return error.error?.message || 'You do not have permission to access this resource.';
+      return (
+        error.error?.message ||
+        'You do not have permission to access this resource.'
+      );
     case 404:
       return error.error?.message || 'The requested resource was not found.';
     case 409:
-      return error.error?.message || 'A conflict occurred. The resource may already exist.';
+      return (
+        error.error?.message ||
+        'A conflict occurred. The resource may already exist.'
+      );
     case 422:
       return extractValidationMessage(error);
     case 429:
@@ -236,7 +243,9 @@ function extractErrorMessage(error: HttpErrorResponse): string {
     case 504:
       return 'Gateway timeout. The server took too long to respond.';
     default:
-      return error.error?.message || `Error ${error.status}: ${error.statusText}`;
+      return (
+        error.error?.message || `Error ${error.status}: ${error.statusText}`
+      );
   }
 }
 
@@ -261,24 +270,24 @@ function handleHttpError(
   req: HttpRequest<unknown>,
   router: Router,
   toastr: ToastrService,
-  config: ErrorInterceptorConfig
+  config: ErrorInterceptorConfig,
 ): void {
   const message = extractErrorMessage(error);
-  
+
   // Handle specific status codes
   switch (error.status) {
     case 401:
       handleUnauthorized(error, req, toastr, router, config, message);
       break;
-      
+
     case 403:
       handleForbidden(router, toastr, config, message);
       break;
-      
+
     case 422:
       handleValidationError(error, toastr, config);
       break;
-      
+
     default:
       // Show toast for all other errors
       if (config.showToast) {
@@ -286,7 +295,7 @@ function handleHttpError(
           timeOut: 5000,
           closeButton: true,
           progressBar: true,
-          positionClass: 'toast-top-right'
+          positionClass: 'toast-top-right',
         });
       }
   }
@@ -301,28 +310,28 @@ function handleUnauthorized(
   toastr: ToastrService,
   router: Router,
   config: ErrorInterceptorConfig,
-  message: string
+  message: string,
 ): void {
   // Don't show toast for refresh token endpoint failures
-  const isRefreshToken = req.url.includes('/auth/refresh') || 
-                         req.url.includes('/refresh-token');
-  
+  const isRefreshToken =
+    req.url.includes('/auth/refresh') || req.url.includes('/refresh-token');
+
   if (!isRefreshToken && config.showToast) {
     toastr.error(message, 'Authentication Error', {
       timeOut: 5000,
       closeButton: true,
-      progressBar: true
+      progressBar: true,
     });
   }
-  
+
   // Clear authentication and redirect to login
   if (config.clearAuthOn401 && !isRefreshToken) {
     clearAuthentication();
-    
+
     // Use setTimeout to avoid navigation during route change
     setTimeout(() => {
       router.navigate(['/login'], {
-        queryParams: { returnUrl: router.url }
+        queryParams: { returnUrl: router.url },
       });
     }, 100);
   }
@@ -335,16 +344,16 @@ function handleForbidden(
   router: Router,
   toastr: ToastrService,
   config: ErrorInterceptorConfig,
-  message: string
+  message: string,
 ): void {
   if (config.showToast) {
     toastr.error(message, 'Access Denied', {
       timeOut: 5000,
       closeButton: true,
-      progressBar: true
+      progressBar: true,
     });
   }
-  
+
   if (config.redirectOn403) {
     // Use setTimeout to avoid navigation during route change
     setTimeout(() => {
@@ -359,14 +368,14 @@ function handleForbidden(
 function handleValidationError(
   error: HttpErrorResponse,
   toastr: ToastrService,
-  config: ErrorInterceptorConfig
+  config: ErrorInterceptorConfig,
 ): void {
   if (!config.showToast) {
     return;
   }
-  
+
   const validationErrors = error.error?.errors;
-  
+
   if (validationErrors && typeof validationErrors === 'object') {
     // Show individual field errors
     Object.entries(validationErrors).forEach(([field, messages]) => {
@@ -378,8 +387,8 @@ function handleValidationError(
           {
             timeOut: 5000,
             closeButton: true,
-            progressBar: true
-          }
+            progressBar: true,
+          },
         );
       });
     });
@@ -391,8 +400,8 @@ function handleValidationError(
       {
         timeOut: 5000,
         closeButton: true,
-        progressBar: true
-      }
+        progressBar: true,
+      },
     );
   }
 }
@@ -408,7 +417,7 @@ function clearAuthentication(): void {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     localStorage.removeItem('auth');
-    
+
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('accessToken');
     sessionStorage.removeItem('refreshToken');
@@ -424,15 +433,15 @@ function clearAuthentication(): void {
  */
 function logError(error: EnhancedError): void {
   const logStyle = 'color: red; font-weight: bold;';
-  
+
   console.group(`%c🚨 HTTP Error ${error.status}`, logStyle);
   console.error('Message:', error.message);
   console.error('URL:', `${error.method} ${error.url}`);
   console.error('Timestamp:', new Date(error.timestamp).toISOString());
-  
+
   if (error.error) {
     console.error('Error Details:', error.error);
   }
-  
+
   console.groupEnd();
 }
