@@ -1,14 +1,13 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 import {
   HttpClient,
   provideHttpClient,
   withInterceptors,
   HttpErrorResponse,
-  HttpEventType
 } from '@angular/common/http';
 import {
   HttpTestingController,
-  provideHttpClientTesting
+  provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -16,7 +15,7 @@ import {
   errorInterceptor,
   loggingInterceptor,
   retryInterceptor,
-  EnhancedError
+  EnhancedError,
 } from './error.interceptor';
 
 describe('HTTP Error Interceptor Suite', () => {
@@ -27,17 +26,23 @@ describe('HTTP Error Interceptor Suite', () => {
     let mockRouter: jasmine.SpyObj<Router>;
 
     beforeEach(() => {
-      // Create spies for dependencies
-      mockToastr = jasmine.createSpyObj('ToastrService', ['error', 'success', 'info', 'warning']);
-      mockRouter = jasmine.createSpyObj('Router', ['navigate'], { url: '/current-page' });
+      mockToastr = jasmine.createSpyObj('ToastrService', [
+        'error',
+        'success',
+        'info',
+        'warning',
+      ]);
+      mockRouter = jasmine.createSpyObj('Router', ['navigate'], {
+        url: '/current-page',
+      });
 
       TestBed.configureTestingModule({
         providers: [
           provideHttpClient(withInterceptors([errorInterceptor])),
           provideHttpClientTesting(),
           { provide: ToastrService, useValue: mockToastr },
-          { provide: Router, useValue: mockRouter }
-        ]
+          { provide: Router, useValue: mockRouter },
+        ],
       });
 
       httpClient = TestBed.inject(HttpClient);
@@ -45,7 +50,7 @@ describe('HTTP Error Interceptor Suite', () => {
     });
 
     afterEach(() => {
-      httpMock.verify(); // Ensure no outstanding requests
+      httpMock.verify();
     });
 
     describe('Network Errors (Status 0)', () => {
@@ -58,10 +63,10 @@ describe('HTTP Error Interceptor Suite', () => {
             expect(mockToastr.error).toHaveBeenCalledWith(
               jasmine.stringContaining('Unable to connect'),
               'Error',
-              jasmine.any(Object)
+              jasmine.any(Object),
             );
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/test');
@@ -72,7 +77,7 @@ describe('HTTP Error Interceptor Suite', () => {
     describe('Client Errors (4xx)', () => {
       it('should handle 400 Bad Request', (done) => {
         const errorMessage = 'Invalid parameters';
-        
+
         httpClient.get('/api/test').subscribe({
           next: () => fail('Should have errored'),
           error: (error: EnhancedError) => {
@@ -80,17 +85,19 @@ describe('HTTP Error Interceptor Suite', () => {
             expect(error.message).toBe(errorMessage);
             expect(mockToastr.error).toHaveBeenCalled();
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/test');
-        req.flush({ message: errorMessage }, { status: 400, statusText: 'Bad Request' });
+        req.flush(
+          { message: errorMessage },
+          { status: 400, statusText: 'Bad Request' },
+        );
       });
 
       it('should handle 401 Unauthorized and redirect to login', (done) => {
-        // Spy on localStorage
         spyOn(localStorage, 'removeItem');
-        
+
         httpClient.get('/api/protected').subscribe({
           next: () => fail('Should have errored'),
           error: (error: EnhancedError) => {
@@ -98,22 +105,23 @@ describe('HTTP Error Interceptor Suite', () => {
             expect(mockToastr.error).toHaveBeenCalledWith(
               jasmine.any(String),
               'Authentication Error',
-              jasmine.any(Object)
+              jasmine.any(Object),
             );
-            
-            // Wait for setTimeout to execute
+
             setTimeout(() => {
-              expect(mockRouter.navigate).toHaveBeenCalledWith(
-                ['/login'],
-                { queryParams: { returnUrl: '/current-page' } }
-              );
+              expect(mockRouter.navigate).toHaveBeenCalledWith(['/login'], {
+                queryParams: { returnUrl: '/current-page' },
+              });
               done();
             }, 150);
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/protected');
-        req.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
+        req.flush(
+          { message: 'Unauthorized' },
+          { status: 401, statusText: 'Unauthorized' },
+        );
       });
 
       it('should NOT show toast for refresh token 401 errors', (done) => {
@@ -123,11 +131,14 @@ describe('HTTP Error Interceptor Suite', () => {
             expect(error.status).toBe(401);
             expect(mockToastr.error).not.toHaveBeenCalled();
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/auth/refresh');
-        req.flush({ message: 'Token expired' }, { status: 401, statusText: 'Unauthorized' });
+        req.flush(
+          { message: 'Token expired' },
+          { status: 401, statusText: 'Unauthorized' },
+        );
       });
 
       it('should handle 403 Forbidden and redirect to unauthorized page', (done) => {
@@ -136,18 +147,20 @@ describe('HTTP Error Interceptor Suite', () => {
           error: (error: EnhancedError) => {
             expect(error.status).toBe(403);
             expect(mockToastr.error).toHaveBeenCalled();
-            
+
             setTimeout(() => {
-              expect(mockRouter.navigate).toHaveBeenCalledWith(['/unauthorized']);
+              expect(mockRouter.navigate).toHaveBeenCalledWith([
+                '/unauthorized',
+              ]);
               done();
             }, 150);
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/admin');
         req.flush(
           { message: 'Access denied' },
-          { status: 403, statusText: 'Forbidden' }
+          { status: 403, statusText: 'Forbidden' },
         );
       });
 
@@ -158,7 +171,7 @@ describe('HTTP Error Interceptor Suite', () => {
             expect(error.status).toBe(404);
             expect(error.message).toContain('not found');
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/nonexistent');
@@ -172,36 +185,35 @@ describe('HTTP Error Interceptor Suite', () => {
             expect(error.status).toBe(409);
             expect(error.message).toBe('Resource already exists');
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/resource');
         req.flush(
           { message: 'Resource already exists' },
-          { status: 409, statusText: 'Conflict' }
+          { status: 409, statusText: 'Conflict' },
         );
       });
 
       it('should handle 422 Validation Error with field details', (done) => {
         const validationErrors = {
           email: ['Email is required', 'Email must be valid'],
-          password: ['Password must be at least 8 characters']
+          password: ['Password must be at least 8 characters'],
         };
 
         httpClient.post('/api/register', {}).subscribe({
           next: () => fail('Should have errored'),
           error: (error: EnhancedError) => {
             expect(error.status).toBe(422);
-            // Should show multiple toasts for each field error
             expect(mockToastr.error).toHaveBeenCalledTimes(3);
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/register');
         req.flush(
           { errors: validationErrors },
-          { status: 422, statusText: 'Unprocessable Entity' }
+          { status: 422, statusText: 'Unprocessable Entity' },
         );
       });
 
@@ -212,7 +224,7 @@ describe('HTTP Error Interceptor Suite', () => {
             expect(error.status).toBe(429);
             expect(error.message).toContain('Too many requests');
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/rate-limited');
@@ -228,7 +240,7 @@ describe('HTTP Error Interceptor Suite', () => {
             expect(error.status).toBe(500);
             expect(error.message).toContain('Internal server error');
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/error');
@@ -242,7 +254,7 @@ describe('HTTP Error Interceptor Suite', () => {
             expect(error.status).toBe(502);
             expect(error.message).toContain('Bad gateway');
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/gateway');
@@ -256,7 +268,7 @@ describe('HTTP Error Interceptor Suite', () => {
             expect(error.status).toBe(503);
             expect(error.message).toContain('Service unavailable');
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/unavailable');
@@ -270,7 +282,7 @@ describe('HTTP Error Interceptor Suite', () => {
             expect(error.status).toBe(504);
             expect(error.message).toContain('Gateway timeout');
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/timeout');
@@ -281,13 +293,13 @@ describe('HTTP Error Interceptor Suite', () => {
     describe('Configuration Options', () => {
       it('should respect X-No-Toast header', (done) => {
         const headers = { 'X-No-Toast': 'true' };
-        
+
         httpClient.get('/api/test', { headers }).subscribe({
           next: () => fail('Should have errored'),
           error: () => {
             expect(mockToastr.error).not.toHaveBeenCalled();
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/test');
@@ -306,7 +318,7 @@ describe('HTTP Error Interceptor Suite', () => {
             expect(error.url).toBe('/api/test');
             expect(error.method).toBe('POST');
             done();
-          }
+          },
         });
 
         const req = httpMock.expectOne('/api/test');
@@ -327,8 +339,8 @@ describe('HTTP Error Interceptor Suite', () => {
       TestBed.configureTestingModule({
         providers: [
           provideHttpClient(withInterceptors([loggingInterceptor])),
-          provideHttpClientTesting()
-        ]
+          provideHttpClientTesting(),
+        ],
       });
 
       httpClient = TestBed.inject(HttpClient);
@@ -341,8 +353,12 @@ describe('HTTP Error Interceptor Suite', () => {
 
     it('should log successful requests', (done) => {
       httpClient.get('/api/test').subscribe(() => {
-        expect(consoleSpy).toHaveBeenCalledWith(jasmine.stringContaining('📤 GET /api/test'));
-        expect(consoleSpy).toHaveBeenCalledWith(jasmine.stringContaining('✅ GET /api/test'));
+        expect(consoleSpy).toHaveBeenCalledWith(
+          jasmine.stringContaining('📤 GET /api/test'),
+        );
+        expect(consoleSpy).toHaveBeenCalledWith(
+          jasmine.stringContaining('✅ GET /api/test'),
+        );
         done();
       });
 
@@ -352,7 +368,7 @@ describe('HTTP Error Interceptor Suite', () => {
 
     it('should log request body when present', (done) => {
       const body = { name: 'test', value: 123 };
-      
+
       httpClient.post('/api/test', body).subscribe(() => {
         expect(consoleSpy).toHaveBeenCalledWith('Request body:', body);
         done();
@@ -368,10 +384,10 @@ describe('HTTP Error Interceptor Suite', () => {
         error: () => {
           expect(console.error).toHaveBeenCalledWith(
             jasmine.stringContaining('❌ GET /api/test failed'),
-            jasmine.any(HttpErrorResponse)
+            jasmine.any(HttpErrorResponse),
           );
           done();
-        }
+        },
       });
 
       const req = httpMock.expectOne('/api/test');
@@ -389,8 +405,8 @@ describe('HTTP Error Interceptor Suite', () => {
       TestBed.configureTestingModule({
         providers: [
           provideHttpClient(withInterceptors([retryInterceptor])),
-          provideHttpClientTesting()
-        ]
+          provideHttpClientTesting(),
+        ],
       });
 
       httpClient = TestBed.inject(HttpClient);
@@ -398,160 +414,176 @@ describe('HTTP Error Interceptor Suite', () => {
     });
 
     afterEach(() => {
-      // Don't verify - we handle cleanup manually in each test
+      httpMock.verify();
     });
 
-    it('should NOT retry POST requests', (done) => {
+    it('should NOT retry POST requests', fakeAsync(() => {
+      let requestCount = 0;
       let errorCaught = false;
-      
+
       httpClient.post('/api/test', {}).subscribe({
         next: () => fail('Should have errored'),
         error: () => {
           errorCaught = true;
-          
-          // Wait a bit to ensure no retry happens
-          setTimeout(() => {
-            const pendingReqs = httpMock.match('/api/test');
-            expect(pendingReqs.length).toBe(0);
-            expect(errorCaught).toBe(true);
-            httpMock.verify();
-            done();
-          }, 100);
-        }
+        },
       });
 
       const req = httpMock.expectOne('/api/test');
+      requestCount++;
       req.error(new ProgressEvent('error'), { status: 0 });
-    });
 
-    it('should NOT retry on 4xx errors', (done) => {
+      flush(); // Complete all async operations
+
+      expect(requestCount).toBe(1);
+      expect(errorCaught).toBe(true);
+    }));
+
+    it('should NOT retry on 4xx errors', fakeAsync(() => {
+      let requestCount = 0;
       let errorCaught = false;
-      
+
       httpClient.get('/api/test').subscribe({
         next: () => fail('Should have errored'),
         error: () => {
           errorCaught = true;
-          
-          // Wait a bit to ensure no retry happens
-          setTimeout(() => {
-            const pendingReqs = httpMock.match('/api/test');
-            expect(pendingReqs.length).toBe(0);
-            expect(errorCaught).toBe(true);
-            httpMock.verify();
-            done();
-          }, 100);
-        }
+        },
       });
 
       const req = httpMock.expectOne('/api/test');
+      requestCount++;
       req.flush(null, { status: 404, statusText: 'Not Found' });
-    });
 
-    it('should respect X-Skip-Retry header', (done) => {
+      flush();
+
+      expect(requestCount).toBe(1);
+      expect(errorCaught).toBe(true);
+    }));
+
+    it('should respect X-Skip-Retry header', fakeAsync(() => {
       const headers = { 'X-Skip-Retry': 'true' };
+      let requestCount = 0;
       let errorCaught = false;
 
       httpClient.get('/api/test', { headers }).subscribe({
         next: () => fail('Should have errored'),
         error: () => {
           errorCaught = true;
-          
-          // Wait a bit to ensure no retry happens
-          setTimeout(() => {
-            const pendingReqs = httpMock.match('/api/test');
-            expect(pendingReqs.length).toBe(0);
-            expect(errorCaught).toBe(true);
-            httpMock.verify();
-            done();
-          }, 100);
-        }
+        },
       });
 
       const req = httpMock.expectOne('/api/test');
+      requestCount++;
       req.error(new ProgressEvent('error'), { status: 0 });
-    });
 
-    it('should retry GET requests on network errors', (done) => {
-      let attempts = 0;
+      flush();
 
-      httpClient.get('/api/test').subscribe({
-        next: () => fail('Should have errored after all retries'),
-        error: () => {
-          // All retries exhausted
-          expect(attempts).toBe(4); // 1 initial + 3 retries
-          httpMock.verify();
-          done();
-        }
-      });
+      expect(requestCount).toBe(1);
+      expect(errorCaught).toBe(true);
+    }));
 
-      // Use setInterval to check for requests and handle them
-      const interval = setInterval(() => {
-        const reqs = httpMock.match('/api/test');
-        if (reqs.length > 0) {
-          attempts++;
-          reqs[0].error(new ProgressEvent('error'), { status: 0 });
-          
-          if (attempts >= 4) {
-            clearInterval(interval);
-          }
-        }
-      }, 100);
-    }, 20000);
+    
 
-    it('should retry GET requests on 5xx errors', (done) => {
-      let attempts = 0;
+    it('should retry GET requests on network errors', fakeAsync(() => {
+      let requestCount = 0;
+      let errorCaught = false;
 
       httpClient.get('/api/test').subscribe({
-        next: () => fail('Should have errored after all retries'),
+        next: () => fail('Should have errored'),
         error: () => {
-          expect(attempts).toBe(4);
-          httpMock.verify();
-          done();
-        }
+          errorCaught = true;
+        },
       });
 
-      const interval = setInterval(() => {
-        const reqs = httpMock.match('/api/test');
-        if (reqs.length > 0) {
-          attempts++;
-          reqs[0].flush(null, { status: 500, statusText: 'Error' });
-          
-          if (attempts >= 4) {
-            clearInterval(interval);
-          }
-        }
-      }, 100);
-    }, 20000);
+      // Initial request
+      let req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.error(new ProgressEvent('error'), { status: 0 });
 
-    it('should succeed after retry', (done) => {
-      let attempts = 0;
+      // Retry 1
+      tick(1000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.error(new ProgressEvent('error'), { status: 0 });
+
+      // Retry 2
+      tick(2000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.error(new ProgressEvent('error'), { status: 0 });
+
+      // Retry 3
+      tick(4000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.error(new ProgressEvent('error'), { status: 0 });
+
+      flush(); // Complete all pending operations
+
+      expect(requestCount).toBe(4);
+      expect(errorCaught).toBe(true);
+    }));
+
+    it('should retry GET requests on 5xx errors', fakeAsync(() => {
+      let requestCount = 0;
+      let errorCaught = false;
+
+      httpClient.get('/api/test').subscribe({
+        next: () => fail('Should have errored'),
+        error: () => {
+          errorCaught = true;
+        },
+      });
+
+      let req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush(null, { status: 500, statusText: 'Error' });
+
+      tick(1000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush(null, { status: 500, statusText: 'Error' });
+
+      tick(2000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush(null, { status: 500, statusText: 'Error' });
+
+      tick(4000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush(null, { status: 500, statusText: 'Error' });
+
+      flush();
+
+      expect(requestCount).toBe(4);
+      expect(errorCaught).toBe(true);
+    }));
+
+    it('should succeed after retry', fakeAsync(() => {
+      let requestCount = 0;
+      let receivedResponse: any;
 
       httpClient.get('/api/test').subscribe({
         next: (response) => {
-          expect(response).toEqual({ data: 'success' });
-          expect(attempts).toBe(2); // Failed once, succeeded on retry
-          httpMock.verify();
-          done();
+          receivedResponse = response;
         },
-        error: () => fail('Should have succeeded')
+        error: () => fail('Should have succeeded'),
       });
 
-      const interval = setInterval(() => {
-        const reqs = httpMock.match('/api/test');
-        if (reqs.length > 0) {
-          attempts++;
-          
-          if (attempts === 1) {
-            // First attempt fails
-            reqs[0].flush(null, { status: 500, statusText: 'Error' });
-          } else {
-            // Second attempt succeeds
-            reqs[0].flush({ data: 'success' });
-            clearInterval(interval);
-          }
-        }
-      }, 100);
-    }, 10000);
+      let req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush(null, { status: 500, statusText: 'Error' });
+
+      tick(1000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush({ data: 'success' });
+
+      flush();
+
+      expect(requestCount).toBe(2);
+      expect(receivedResponse).toEqual({ data: 'success' });
+    }));
   });
 
   describe('Integration: All Interceptors Together', () => {
@@ -562,19 +594,25 @@ describe('HTTP Error Interceptor Suite', () => {
 
     beforeEach(() => {
       mockToastr = jasmine.createSpyObj('ToastrService', ['error']);
-      mockRouter = jasmine.createSpyObj('Router', ['navigate'], { url: '/test' });
+      mockRouter = jasmine.createSpyObj('Router', ['navigate'], {
+        url: '/test',
+      });
       spyOn(console, 'log');
       spyOn(console, 'error');
 
       TestBed.configureTestingModule({
         providers: [
           provideHttpClient(
-            withInterceptors([retryInterceptor, loggingInterceptor, errorInterceptor])
+            withInterceptors([
+              retryInterceptor,
+              loggingInterceptor,
+              errorInterceptor,
+            ]),
           ),
           provideHttpClientTesting(),
           { provide: ToastrService, useValue: mockToastr },
-          { provide: Router, useValue: mockRouter }
-        ]
+          { provide: Router, useValue: mockRouter },
+        ],
       });
 
       httpClient = TestBed.inject(HttpClient);
@@ -588,41 +626,157 @@ describe('HTTP Error Interceptor Suite', () => {
     it('should apply all interceptors in correct order', (done) => {
       httpClient.get('/api/test').subscribe({
         next: () => {
-          expect(console.log).toHaveBeenCalled(); // Logging
+          expect(console.log).toHaveBeenCalled();
           done();
-        }
+        },
       });
 
       const req = httpMock.expectOne('/api/test');
       req.flush({ success: true });
     });
 
-    it('should retry, log, and handle errors together', (done) => {
-      let attempts = 0;
+    it('should retry GET requests on network error followed by 5xx errors', fakeAsync(() => {
+      let requestCount = 0;
+      let errorCaught = false;
+
+      httpClient.get('/api/test').subscribe({
+        next: () => fail('Should have errored'),
+        error: () => {
+          errorCaught = true;
+        },
+      });
+
+      // 1st attempt: network error
+      let req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.error(new ProgressEvent('network error'), { status: 0 });
+
+      // Retry 1: 500
+      tick(1000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush(null, { status: 500, statusText: 'Internal Server Error' });
+
+      // Retry 2: 502
+      tick(2000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush(null, { status: 502, statusText: 'Bad Gateway' });
+
+      // Retry 3: 503
+      tick(4000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush(null, { status: 503, statusText: 'Service Unavailable' });
+
+      flush();
+
+      expect(requestCount).toBe(4); // initial + 3 retries
+      expect(errorCaught).toBe(true);
+    }));
+
+    it('should stop retrying after maximum attempts', fakeAsync(() => {
+      const maxRetries = 3;
+      let requestCount = 0;
+
+      httpClient.get('/api/test').subscribe({
+        next: () => fail('Should have errored'),
+        error: () => {},
+      });
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        const req = httpMock.expectOne('/api/test');
+        requestCount++;
+        req.error(new ProgressEvent('network error'), { status: 0 });
+        tick(1000 * Math.pow(2, attempt)); // exponential backoff
+      }
+
+      flush();
+      expect(requestCount).toBe(maxRetries + 1);
+    }));
+
+    it('should not retry PUT/PATCH/DELETE requests even on network errors', fakeAsync(() => {
+      const methods = ['PUT', 'PATCH', 'DELETE'];
+
+      methods.forEach((method) => {
+        let errorCaught = false;
+
+        httpClient.request(method, '/api/test').subscribe({
+          next: () => fail('Should have errored'),
+          error: () => {
+            errorCaught = true;
+          },
+        });
+
+        const req = httpMock.expectOne('/api/test');
+        req.error(new ProgressEvent('network error'), { status: 0 });
+
+        flush();
+        expect(errorCaught).toBe(true);
+      });
+    }));
+
+    it('should respect both X-No-Toast and X-Skip-Retry headers together', fakeAsync(() => {
+      let errorCaught = false;
+
+      httpClient
+        .get('/api/test', {
+          headers: { 'X-No-Toast': 'true', 'X-Skip-Retry': 'true' },
+        })
+        .subscribe({
+          next: () => fail('Should have errored'),
+          error: () => {
+            errorCaught = true;
+          },
+        });
+
+      const req = httpMock.expectOne('/api/test');
+      req.error(new ProgressEvent('network error'), { status: 0 });
+
+      flush();
+      expect(errorCaught).toBe(true);
+      expect(mockToastr.error).not.toHaveBeenCalled();
+    }));
+
+    it('should retry, log, and handle errors together', fakeAsync(() => {
+      let requestCount = 0;
+      let errorCaught = false;
+      let finalError: EnhancedError | null = null;
 
       httpClient.get('/api/test').subscribe({
         next: () => fail('Should have errored'),
         error: (error: EnhancedError) => {
-          expect(attempts).toBe(4); // Retry interceptor
-          expect(console.error).toHaveBeenCalled(); // Logging interceptor
-          expect(mockToastr.error).toHaveBeenCalled(); // Error interceptor
-          expect(error.status).toBe(500); // Enhanced error
-          httpMock.verify();
-          done();
-        }
+          errorCaught = true;
+          finalError = error;
+        },
       });
 
-      const interval = setInterval(() => {
-        const reqs = httpMock.match('/api/test');
-        if (reqs.length > 0) {
-          attempts++;
-          reqs[0].flush(null, { status: 500, statusText: 'Error' });
-          
-          if (attempts >= 4) {
-            clearInterval(interval);
-          }
-        }
-      }, 100);
-    }, 20000);
+      let req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush(null, { status: 500, statusText: 'Error' });
+
+      tick(1000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush(null, { status: 500, statusText: 'Error' });
+
+      tick(2000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush(null, { status: 500, statusText: 'Error' });
+
+      tick(4000);
+      req = httpMock.expectOne('/api/test');
+      requestCount++;
+      req.flush(null, { status: 500, statusText: 'Error' });
+
+      flush();
+
+      expect(requestCount).toBe(4);
+      expect(console.error).toHaveBeenCalled();
+      expect(mockToastr.error).toHaveBeenCalled();
+      expect(finalError!.status).toBe(500);
+      expect(errorCaught).toBe(true);
+    }));
   });
 });
