@@ -9,10 +9,7 @@ import { StorageService } from '../../services/storage/storage.service';
 import { inject } from '@angular/core';
 import { AuthService } from '../../services/auth/auth.service';
 
-export const authInterceptor: HttpInterceptorFn = (
-  req,
-  next,
-): Observable<HttpEvent<unknown>> => {
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const storageService = inject(StorageService);
   const authService = inject(AuthService);
 
@@ -26,52 +23,52 @@ export const authInterceptor: HttpInterceptorFn = (
     return next(req);
   }
 
-  const accessToken = storageService.getAccessToken();
-  if (accessToken) {
-    req = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-  }
+  const token = storageService.getAccessToken();
 
-  return next(req).pipe(
+  const authReq = token
+    ? req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    : req;
+
+  return next(authReq).pipe(
     catchError((error) => {
-      if (error.status === 401 && !req.url.includes('/auth/refresh')) {
-        return handleTokenRefresh(req, next, authService);
+      if (error.status !== 401 || req.url.includes('/auth/refresh')) {
+        return throwError(() => error);
       }
-      return throwError(() => error);
+
+      // Attempt token refresh
+      return authService.refreshToken().pipe(
+        switchMap(() => {
+          const newToken = authService.getAccessToken();
+
+          if (!newToken) {
+            // CRITICAL FIX: Call logout immediately when token is invalid
+            authService.logout();
+            return throwError(() => new Error('Token refresh failed'));
+          }
+
+          const retryReq = req.clone({
+            setHeaders: {
+              Authorization: `Bearer ${newToken}`,
+            },
+          });
+
+          return next(retryReq);
+        }),
+        catchError((refreshError) => {
+          // Only logout if this is a refresh service error, not our validation error
+          if (refreshError.message !== 'Token refresh failed') {
+            authService.logout();
+          }
+          return throwError(() => refreshError);
+        }),
+      );
     }),
   );
 };
-
-function handleTokenRefresh(
-  req: HttpRequest<unknown>,
-  next: HttpHandlerFn,
-  authService: AuthService,
-): Observable<HttpEvent<unknown>> {
-  return authService.refreshToken().pipe(
-    switchMap(() => {
-      const newToken = authService.getAccessToken();
-
-      if (newToken) {
-        const cloneReq = req.clone({
-          setHeaders: {
-            Authorization: `Bearer ${newToken}`,
-          },
-        });
-        return next(cloneReq);
-      }
-
-      authService.logout();
-      return throwError(() => new Error('Token refresh failed'));
-    }),
-    catchError((error) => {
-      authService.logout();
-      return throwError(() => error);
-    }),
-  );
-}
 
 export const headersInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
