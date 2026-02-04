@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, tap, finalize } from 'rxjs/operators';
 import {
   User,
   UserRole,
@@ -120,18 +120,24 @@ export class AuthService {
       .pipe(
         tap((response) => this.handleAuthSuccess(response)),
         catchError((error) => this.handleError(error)),
-        tap(() => this.isLoading.set(false)),
+        finalize(() => this.isLoading.set(false))
       );
   }
 
   logout(): void {
     const refreshToken = this.storage.getRefreshToken();
+    
+    // Always clear auth data first
+    this.clearAuthData();
+    
+    // Then attempt to notify server (fire and forget)
     if (refreshToken) {
       this.http.post(`${this.apiUrl}/logout`, { refreshToken }).subscribe({
-        error: (err) => console.error('Logout error', err),
+        error: (err) => console.error('Logout error', err)
       });
     }
-    this.clearAuthData();
+    
+    // Navigate to login
     this.router.navigate(['/login']);
   }
 
@@ -143,7 +149,7 @@ export class AuthService {
       .pipe(
         tap((response) => this.handleAuthSuccess(response)),
         catchError((error) => this.handleError(error)),
-        tap(() => this.isLoading.set(false)),
+        finalize(() => this.isLoading.set(false))
       );
   }
 
