@@ -1,0 +1,280 @@
+// Variables
+$primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$primary-color: #667eea;
+$text-dark: #1a202c;
+$text-medium: #4a5568;
+$text-light: #718096;
+$white: #ffffff;
+$bg-dark: #1a202c;
+$bg-darker: #0f1419;
+
+// ==================== FOOTER ====================
+.app-footer {
+  background: $bg-dark;
+  color: $white;
+  margin-top: auto; // Push footer to bottom
+}
+
+// ==================== MAIN CONTENT ====================
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 4rem 2rem 2rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  gap: 3rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    padding: 3rem 1.5rem 2rem;
+  }
+}
+
+// ==================== FOOTER SECTIONS ====================
+.footer-section {
+  .footer-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 1.5rem 0;
+    color: $white;
+  }
+
+  .footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    li {
+      margin: 0;
+    }
+
+    .footer-link {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 0.938rem;
+      cursor: pointer;
+      transition: color 0.2s;
+      display: inline-block;
+
+      &:hover {
+        color: $white;
+      }
+    }
+  }
+}
+
+// ==================== BRAND SECTION ====================
+.brand-section {
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: $white;
+    }
+
+    span {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: $white;
+    }
+  }
+
+  .footer-tagline {
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.6;
+    margin: 0 0 1.5rem 0;
+    max-width: 320px;
+  }
+}
+
+// ==================== SOCIAL LINKS ====================
+.social-links {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  .social-link {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $white;
+    text-decoration: none;
+    transition: all 0.3s;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: $primary-gradient;
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// ==================== APP BADGES ====================
+.app-badges {
+  .download-text {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0 0 0.75rem 0;
+  }
+
+  .badge-links {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+
+    .app-badge {
+      display: inline-block;
+      height: 40px;
+      
+      img {
+        height: 100%;
+        width: auto;
+        border-radius: 6px;
+      }
+    }
+  }
+}
+
+// ==================== FOOTER BOTTOM ====================
+.footer-bottom {
+  background: $bg-darker;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-bottom-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+  }
+}
+
+// ==================== COPYRIGHT ====================
+.copyright {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+}
+
+// ==================== LEGAL LINKS ====================
+.legal-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+
+  .legal-link {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &:hover {
+      color: $white;
+    }
+  }
+
+  .separator {
+    color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+// ==================== PAYMENT METHODS ====================
+.payment-methods {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  .payment-text {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .payment-icons {
+    display: flex;
+    gap: 0.5rem;
+
+    .payment-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+// ==================== ANIMATIONS ====================
+.social-link,
+.footer-link,
+.legal-link {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: $primary-gradient;
+    transition: width 0.3s;
+  }
+
+  &:hover::after {
+    width: 100%;
+  }
+}
+
+// ==================== RESPONSIVE ====================
+@media (max-width: 568px) {
+  .footer-bottom-content {
+    .copyright,
+    .legal-links,
+    .payment-methods {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .legal-links {
+    justify-content: center;
+  }
+}

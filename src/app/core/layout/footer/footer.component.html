@@ -1,0 +1,130 @@
+<footer class="app-footer">
+  <!-- Main Footer Content -->
+  <div class="footer-content">
+    <!-- Brand Section -->
+    <div class="footer-section brand-section">
+      <div class="footer-logo">
+        <mat-icon>restaurant</mat-icon>
+        <span>HomeMeals</span>
+      </div>
+      <p class="footer-tagline">
+        Connecting food lovers with talented home chefs. 
+        Authentic meals, delivered with love.
+      </p>
+      
+      <!-- Social Links -->
+      <div class="social-links">
+        @for (social of socialLinks; track social.label) {
+          <a [href]="social.url" 
+             class="social-link" 
+             [attr.aria-label]="social.label"
+             target="_blank"
+             rel="noopener noreferrer">
+            <mat-icon>{{ social.icon }}</mat-icon>
+          </a>
+        }
+      </div>
+
+      <!-- App Download Badges (Optional) -->
+      <div class="app-badges">
+        <p class="download-text">Download Our App</p>
+        <div class="badge-links">
+          <a href="#" class="app-badge">
+            <img src="/assets/images/app-store.svg" alt="Download on App Store" />
+          </a>
+          <a href="#" class="app-badge">
+            <img src="/assets/images/play-store.svg" alt="Get it on Google Play" />
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- For Customers -->
+    <div class="footer-section">
+      <h4 class="footer-title">For Customers</h4>
+      <ul class="footer-links">
+        @for (link of customerLinks; track link.label) {
+          <li>
+            <a (click)="handleLinkClick(link)" class="footer-link">
+              {{ link.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <!-- For Cooks -->
+    <div class="footer-section">
+      <h4 class="footer-title">For Cooks</h4>
+      <ul class="footer-links">
+        @for (link of cookLinks; track link.label) {
+          <li>
+            <a (click)="handleLinkClick(link)" class="footer-link">
+              {{ link.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <!-- For Delivery Partners -->
+    <div class="footer-section">
+      <h4 class="footer-title">Delivery Partners</h4>
+      <ul class="footer-links">
+        @for (link of deliveryLinks; track link.label) {
+          <li>
+            <a (click)="handleLinkClick(link)" class="footer-link">
+              {{ link.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <!-- Support -->
+    <div class="footer-section">
+      <h4 class="footer-title">Support</h4>
+      <ul class="footer-links">
+        @for (link of supportLinks; track link.label) {
+          <li>
+            <a (click)="handleLinkClick(link)" class="footer-link">
+              {{ link.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+
+  <!-- Footer Bottom -->
+  <div class="footer-bottom">
+    <div class="footer-bottom-content">
+      <!-- Copyright -->
+      <p class="copyright">
+        &copy; {{ currentYear }} HomeMeals. All rights reserved.
+      </p>
+
+      <!-- Legal Links -->
+      <div class="legal-links">
+        @for (link of legalLinks; track link.label; let last = $last) {
+          <a (click)="handleLinkClick(link)" class="legal-link">
+            {{ link.label }}
+          </a>
+          @if (!last) {
+            <span class="separator">•</span>
+          }
+        }
+      </div>
+
+      <!-- Payment Methods (Optional) -->
+      <div class="payment-methods">
+        <span class="payment-text">We accept:</span>
+        <div class="payment-icons">
+          <mat-icon class="payment-icon">credit_card</mat-icon>
+          <mat-icon class="payment-icon">account_balance</mat-icon>
+          <mat-icon class="payment-icon">smartphone</mat-icon>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
