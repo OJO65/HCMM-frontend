@@ -1,0 +1,813 @@
+// ==================== VARIABLES ====================
+$primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$primary-color: #667eea;
+$primary-dark: #764ba2;
+$text-dark: #1a202c;
+$text-medium: #4a5568;
+$text-light: #718096;
+$bg-light: #f7fafc;
+$white: #ffffff;
+
+// ==================== GLOBAL CONTAINER ====================
+.landing-container {
+  min-height: 100vh;
+  background: $white;
+  overflow-x: hidden;
+  
+}
+
+// ==================== HERO SECTION ====================
+.hero {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  min-height: calc(100vh - 80px);
+  margin-top: 100px;
+}
+
+.hero-content {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 50px;
+  margin-bottom: 2rem;
+  
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: $primary-color;
+  }
+
+  span {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $primary-color;
+  }
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: $text-dark;
+  margin: 0 0 1.5rem 0;
+
+  .highlight {
+    background: $primary-gradient;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  line-height: 1.8;
+  color: $text-medium;
+  margin: 0 0 2.5rem 0;
+  max-width: 600px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+
+  button {
+    height: 56px;
+    padding: 0 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.trust-indicators {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: $text-light;
+    font-size: 0.875rem;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: $primary-color;
+    }
+  }
+}
+
+.hero-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.hero-illustration {
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 1;
+
+  border-radius: 50%;
+  overflow: hidden;
+
+  /* floating card feel */
+  box-shadow:
+    0 20px 40px rgba(0,0,0,.15),
+    0 6px 12px rgba(0,0,0,.08);
+
+  position: relative;
+}
+
+/* image fill */
+
+.hero-illustration img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* optional gradient overlay */
+
+.hero-illustration::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #667eea55, #764ba255);
+  mix-blend-mode: overlay;
+}
+
+
+// ==================== STATS SECTION ====================
+.stats-section {
+  background: $primary-gradient;
+  padding: 3rem 2rem;
+}
+
+.stats-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+}
+
+.stat-item {
+  text-align: center;
+  color: $white;
+
+  .stat-value {
+    font-size: 3rem;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .stat-label {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0 0;
+  }
+}
+
+// ==================== SECTION COMMON STYLES ====================
+.section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+
+  .section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: $text-dark;
+    margin: 0 0 1rem 0;
+  }
+
+  .section-subtitle {
+    font-size: 1.125rem;
+    color: $text-medium;
+    margin: 0;
+  }
+}
+
+// ==================== HOW IT WORKS SECTION ====================
+.how-it-works {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 6rem 2rem;
+}
+
+.user-type-tabs {
+  ::ng-deep {
+    .mat-mdc-tab-labels {
+      justify-content: center;
+    }
+
+    .mat-mdc-tab-label {
+      min-width: 180px;
+      height: 64px;
+    }
+  }
+}
+
+.steps-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  padding: 3rem 0;
+}
+
+.step-card {
+  position: relative;
+  text-align: center;
+  padding: 2rem;
+  border-radius: 16px;
+  background: $bg-light;
+  transition: transform 0.3s, box-shadow 0.3s;
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  .step-number {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: $primary-gradient;
+    color: $white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+  }
+
+  .step-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    background: $white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .step-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+      color: $primary-color;
+    }
+  }
+
+  .step-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: $text-dark;
+    margin: 0 0 0.75rem 0;
+  }
+
+  .step-description {
+    color: $text-medium;
+    margin: 0;
+    line-height: 1.6;
+  }
+}
+
+.delivery-info {
+  padding: 3rem 0;
+}
+
+.delivery-hero {
+  text-align: center;
+  margin-bottom: 3rem;
+
+  h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: $text-dark;
+    margin: 0 0 1rem 0;
+  }
+
+  p {
+    font-size: 1.125rem;
+    color: $text-medium;
+    margin: 0;
+  }
+}
+
+.delivery-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.delivery-feature {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: $bg-light;
+  border-radius: 12px;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: $primary-color;
+    flex-shrink: 0;
+  }
+
+  h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $text-dark;
+    margin: 0 0 0.5rem 0;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: $text-medium;
+    margin: 0;
+    line-height: 1.6;
+  }
+}
+
+.tab-cta {
+  text-align: center;
+  margin-top: 2rem;
+
+  button {
+    height: 56px;
+    padding: 0 3rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+}
+
+// ==================== FEATURES SECTION ====================
+.features-section {
+  background: $bg-light;
+  padding: 6rem 2rem;
+}
+
+.features-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.feature-card {
+  padding: 2.5rem 2rem;
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  .feature-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    background: $primary-gradient;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .feature-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+      color: $white !important;
+    }
+  }
+
+  .feature-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: $text-dark;
+    margin: 0 0 0.75rem 0;
+  }
+
+  .feature-description {
+    color: $text-medium;
+    margin: 0;
+    line-height: 1.6;
+  }
+}
+
+// ==================== CUISINES SECTION ====================
+.cuisines-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 6rem 2rem;
+}
+
+.cuisines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+
+.cuisine-card {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  background: $bg-light;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    background: $white;
+  }
+
+  .cuisine-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .cuisine-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $text-dark;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .cuisine-description {
+    font-size: 0.875rem;
+    color: $text-medium;
+    margin: 0;
+  }
+}
+
+// ==================== COOKS SECTION ====================
+.cooks-section {
+  background: $bg-light;
+  padding: 6rem 2rem;
+}
+
+.cooks-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.cooks-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: $text-dark;
+  margin: 0 0 1rem 0;
+}
+
+.cooks-subtitle {
+  font-size: 1.125rem;
+  color: $text-medium;
+  margin: 0 0 2rem 0;
+  line-height: 1.8;
+}
+
+.cook-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.cook-benefit {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+
+  h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $text-dark;
+    margin: 0 0 0.25rem 0;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: $text-medium;
+    margin: 0;
+    line-height: 1.6;
+  }
+}
+
+.cook-cta {
+  height: 56px;
+  padding: 0 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cooks-illustration {
+  width: 100%;
+  aspect-ratio: 1;
+  background: $primary-gradient;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.15;
+
+  .cook-icon {
+    font-size: 200px;
+    width: 200px;
+    height: 200px;
+    color: $white;
+  }
+}
+
+// ==================== FINAL CTA SECTION ====================
+.final-cta {
+  background: $primary-gradient;
+  padding: 6rem 2rem;
+  text-align: center;
+  color: $white;
+}
+
+.final-cta-content {
+  max-width: 800px;
+  margin: 0 auto;
+
+  h2 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0 0 1rem 0;
+  }
+
+  p {
+    font-size: 1.25rem;
+    margin: 0 0 2.5rem 0;
+    opacity: 0.95;
+  }
+}
+
+.final-cta-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  .cta-large,
+  .cta-large-secondary {
+    height: 64px;
+    padding: 0 3rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  .cta-large {
+    background: $white;
+    color: $primary-color;
+
+    &:hover {
+      background: $bg-light;
+    }
+  }
+
+  .cta-large-secondary {
+    border-color: $white;
+    color: $white;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+// ==================== FOOTER ====================
+.footer {
+  background: $text-dark;
+  color: $white;
+  padding: 4rem 2rem 2rem;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto 3rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 3rem;
+}
+
+.footer-section {
+  h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+  }
+
+  a {
+    display: block;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &:hover {
+      color: $white;
+    }
+  }
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
+
+  span {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+}
+
+.footer-tagline {
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+}
+
+.footer-bottom {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+
+    a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: color 0.2s;
+
+      &:hover {
+        color: $white;
+      }
+    }
+
+    span {
+      color: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+// ==================== RESPONSIVE DESIGN ====================
+@media (max-width: 1024px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    padding: 3rem 2rem;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+  }
+
+  .cooks-content {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-menu {
+    display: none;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .hero-image {
+    display: none;
+  }
+
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .steps-container,
+  .features-grid,
+  .cuisines-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .final-cta-content h2 {
+    font-size: 2rem;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+// ==================== ANIMATIONS ====================
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
