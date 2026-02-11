@@ -1,31 +1,38 @@
 <div class="landing-container">
- 
-<div class="hero-overlay"></div>
+  <div class="hero-overlay"></div>
   <!-- HERO SECTION -->
   <section class="hero">
-    
     <div class="hero-content">
       <div class="hero-badge">
         <mat-icon>verified</mat-icon>
         <span>Over 500 Verified Home Chefs</span>
       </div>
-      
+
       <h1 class="hero-title">
-        Authentic Home-Cooked Meals
-        Delivered to Your <span class="highlight">Doorstep.</span>
+        Authentic Home-Cooked Meals Delivered to Your
+        <span class="highlight">Doorstep.</span>
       </h1>
-      
+
       <p class="hero-subtitle">
-        Skip the cooking! Discover delicious, homemade meals prepared by talented local chefs. 
-        Fresh, authentic, and delivered while still hot.
+        Skip the cooking! Discover delicious, homemade meals prepared by
+        talented local chefs. Fresh, authentic, and delivered while still hot.
       </p>
 
       <div class="hero-actions">
-        <button mat-raised-button color="primary" (click)="navigateToRegister('customer')" class="cta-primary">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="navigateToRegister('customer')"
+          class="cta-primary"
+        >
           <mat-icon>search</mat-icon>
           Browse Meals
         </button>
-        <button mat-stroked-button (click)="navigateToRegister('cook')" class="cta-secondary">
+        <button
+          mat-stroked-button
+          (click)="navigateToRegister('cook')"
+          class="cta-secondary"
+        >
           <mat-icon>restaurant</mat-icon>
           Become a Cook
         </button>
@@ -51,7 +58,10 @@
     <div class="hero-image">
       <!-- You can replace this with your unDraw illustration -->
       <div class="hero-illustration">
-        <img src='https://images.pexels.com/photos/32612771/pexels-photo-32612771.jpeg' alt="">
+        <img
+          src="https://images.pexels.com/photos/32612771/pexels-photo-32612771.jpeg"
+          alt=""
+        />
       </div>
     </div>
   </section>
@@ -61,7 +71,10 @@
     <div class="stats-container">
       @for (stat of stats; track stat.label) {
         <div class="stat-item">
-          <h3 class="stat-value">{{ stat.value }}</h3>
+          <h3 class="stat-value" [attr.data-value]="stat.value">
+            {{ stat.value }}
+          </h3>
+
           <p class="stat-label">{{ stat.label }}</p>
         </div>
       }
@@ -82,7 +95,7 @@
           <mat-icon>person</mat-icon>
           <span>For Customers</span>
         </ng-template>
-        
+
         <div class="steps-container">
           @for (step of customerSteps; track step.step) {
             <div class="step-card">
@@ -97,7 +110,11 @@
         </div>
 
         <div class="tab-cta">
-          <button mat-raised-button color="primary" (click)="navigateToRegister('customer')">
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="navigateToRegister('customer')"
+          >
             Start Ordering
           </button>
         </div>
@@ -109,7 +126,7 @@
           <mat-icon>restaurant</mat-icon>
           <span>For Cooks</span>
         </ng-template>
-        
+
         <div class="steps-container">
           @for (step of cookSteps; track step.step) {
             <div class="step-card">
@@ -124,7 +141,11 @@
         </div>
 
         <div class="tab-cta">
-          <button mat-raised-button color="primary" (click)="navigateToRegister('cook')">
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="navigateToRegister('cook')"
+          >
             Start Cooking
           </button>
         </div>
@@ -136,13 +157,16 @@
           <mat-icon>delivery_dining</mat-icon>
           <span>For Delivery</span>
         </ng-template>
-        
+
         <div class="delivery-info">
           <div class="delivery-hero">
             <h3>Join Our Delivery Network</h3>
-            <p>Flexible schedule, competitive pay, and smart routing to maximize your earnings</p>
+            <p>
+              Flexible schedule, competitive pay, and smart routing to maximize
+              your earnings
+            </p>
           </div>
-          
+
           <div class="delivery-features">
             @for (feature of deliveryFeatures; track feature.title) {
               <div class="delivery-feature">
@@ -156,7 +180,11 @@
           </div>
 
           <div class="tab-cta">
-            <button mat-raised-button color="primary" (click)="navigateToRegister('delivery')">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="navigateToRegister('delivery')"
+            >
               Become a Delivery Partner
             </button>
           </div>
@@ -168,7 +196,7 @@
   <!-- FEATURES SECTION (FOR CUSTOMERS) -->
   <section class="features-section" id="features">
     <div class="section-header">
-      <h2 class="section-title">Why Choose HomeMeals?</h2>
+      <h2 class="section-title">Why Choose Home Coooked Meals Marketplace?</h2>
       <p class="section-subtitle">Experience the best of home-cooked meals</p>
     </div>
 
@@ -176,7 +204,9 @@
       @for (feature of customerFeatures; track feature.title) {
         <mat-card class="feature-card">
           <div class="feature-icon-wrapper">
-            <mat-icon color="primary" class="feature-icon">{{ feature.icon }}</mat-icon>
+            <mat-icon color="primary" class="feature-icon">{{
+              feature.icon
+            }}</mat-icon>
           </div>
           <h3 class="feature-title">{{ feature.title }}</h3>
           <p class="feature-description">{{ feature.description }}</p>
@@ -189,17 +219,21 @@
   <section class="cuisines-section" id="cuisines">
     <div class="section-header">
       <h2 class="section-title">Explore Cuisines</h2>
-      <p class="section-subtitle">From local favorites to international delights</p>
+      <p class="section-subtitle">
+        From local favorites to international delights
+      </p>
     </div>
 
-    <div class="cuisines-grid">
-      @for (cuisine of cuisines; track cuisine.name) {
-        <div class="cuisine-card" (click)="navigateToRegister('customer')">
-          <div class="cuisine-icon">{{ cuisine.icon }}</div>
-          <h3 class="cuisine-name">{{ cuisine.name }}</h3>
-          <p class="cuisine-description">{{ cuisine.description }}</p>
-        </div>
-      }
+    <div class="carousel">
+      <div class="carousel-track">
+        @for (cuisine of cuisinesLoop; track cuisine.name + $index) {
+          <div class="cuisine-card" (click)="navigateToRegister('customer')">
+            <div class="cuisine-icon">{{ cuisine.icon }}</div>
+            <h3 class="cuisine-name">{{ cuisine.name }}</h3>
+            <p class="cuisine-description">{{ cuisine.description }}</p>
+          </div>
+        }
+      </div>
     </div>
   </section>
 
@@ -209,7 +243,8 @@
       <div class="cooks-text">
         <h2 class="cooks-title">Turn Your Passion Into Profit</h2>
         <p class="cooks-subtitle">
-          Share your culinary skills with your community and earn extra income doing what you love.
+          Share your culinary skills with your community and earn extra income
+          doing what you love.
         </p>
 
         <div class="cook-benefits">
@@ -224,7 +259,12 @@
           }
         </div>
 
-        <button mat-raised-button color="primary" (click)="navigateToRegister('cook')" class="cook-cta">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="navigateToRegister('cook')"
+          class="cook-cta"
+        >
           Join as a Cook
           <mat-icon>arrow_forward</mat-icon>
         </button>
@@ -232,7 +272,11 @@
 
       <div class="cooks-image">
         <div class="cooks-illustration">
-          <mat-icon class="cook-icon">restaurant</mat-icon>
+          <img
+            src="https://images.pexels.com/photos/10615309/pexels-photo-10615309.jpeg"
+            alt="Cook"
+            class="cook-photo"
+          />
         </div>
       </div>
     </div>
@@ -243,12 +287,21 @@
     <div class="final-cta-content">
       <h2>Ready to Get Started?</h2>
       <p>Join thousands of food lovers enjoying authentic home-cooked meals</p>
-      
+
       <div class="final-cta-actions">
-        <button mat-raised-button color="primary" (click)="navigateToRegister('customer')" class="cta-large">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="navigateToRegister('customer')"
+          class="cta-large"
+        >
           Order Now
         </button>
-        <button mat-stroked-button (click)="navigateToRegister('cook')" class="cta-large-secondary">
+        <button
+          mat-stroked-button
+          (click)="navigateToRegister('cook')"
+          class="cta-large-secondary"
+        >
           Become a Cook
         </button>
       </div>
