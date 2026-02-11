@@ -1,19 +1,9 @@
 <header class="app-header" [class.transparent]="transparent">
   <div class="header-shell">
     <div class="header-content">
-
       <!-- Logo -->
       <div class="logo" routerLink="/">
-        <div class="logo-image">
-          <img src="/undraw_chef_yoa7.svg" alt="HomeMeals Logo" />
-        </div>
-
-        <div class="logo-text-wrap">
-          <span class="logo-text">Home</span>
-          <span class="logo-text">Cooked</span>
-          <span class="logo-text">Meals</span>
-          <span class="logo-text">MarketPlace</span>
-        </div>
+        <img src="/HC__1_-removebg-preview.png" alt="HomeCook" />
       </div>
 
       <!-- Desktop Nav -->
@@ -33,10 +23,11 @@
 
       <!-- Actions -->
       <div class="header-actions">
-
+        <!-- Cart (desktop only, authenticated only) -->
         @if (isAuthenticated()) {
           <button
             mat-icon-button
+            class="desktop-action"
             (click)="cart()"
             [matBadge]="cartItemCount()"
             matBadgeColor="warn"
@@ -45,37 +36,78 @@
           </button>
         }
 
-        <!-- Account -->
-        <button mat-icon-button [matMenuTriggerFor]="accountMenu">
+        <!-- Account (desktop only) -->
+        <button mat-icon-button class="desktop-action" [matMenuTriggerFor]="accountMenu">
           <mat-icon>account_circle</mat-icon>
         </button>
 
         <!-- Mobile hamburger -->
-        <button mat-icon-button class="mobile-btn" (click)="toggleMobile()">
-          <mat-icon>menu</mat-icon>
+        <button 
+          mat-icon-button 
+          class="mobile-hamburger" 
+          (click)="toggleMobile()"
+          [class.open]="mobileMenuOpen()"
+        >
+          <mat-icon>{{ mobileMenuOpen() ? 'close' : 'menu' }}</mat-icon>
         </button>
-
       </div>
-
     </div>
   </div>
 
-  <!-- Mobile Nav -->
+  <!-- Mobile Menu Backdrop -->
   @if (mobileMenuOpen()) {
-    <div class="mobile-menu">
-      @for (item of navigationItems; track item.label) {
-        <div class="mobile-link" (click)="handleNav(item)">
-          <mat-icon>{{ item.icon }}</mat-icon>
-          <span>{{ item.label }}</span>
+    <div class="mobile-backdrop" (click)="toggleMobile()"></div>
+  }
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" [class.open]="mobileMenuOpen()">
+    <div class="mobile-menu-content">
+      <!-- Navigation -->
+      <div class="mobile-section">
+        @for (item of navigationItems; track item.label) {
+          <div class="mobile-link" (click)="handleNav(item)">
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <span>{{ item.label }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Mobile Actions -->
+      @if (isAuthenticated()) {
+        <mat-divider></mat-divider>
+        <div class="mobile-section">
+          <div class="mobile-link" (click)="cart(); toggleMobile()">
+            <mat-icon [matBadge]="cartItemCount()" matBadgeColor="warn">shopping_cart</mat-icon>
+            <span>Cart</span>
+          </div>
+          <div class="mobile-link" (click)="profile(); toggleMobile()">
+            <mat-icon>person</mat-icon>
+            <span>Profile</span>
+          </div>
+          <div class="mobile-link" (click)="logout(); toggleMobile()">
+            <mat-icon>logout</mat-icon>
+            <span>Logout</span>
+          </div>
+        </div>
+      } @else {
+        <mat-divider></mat-divider>
+        <div class="mobile-section">
+          <div class="mobile-link" (click)="login(); toggleMobile()">
+            <mat-icon>login</mat-icon>
+            <span>Login</span>
+          </div>
+          <div class="mobile-link" (click)="register(); toggleMobile()">
+            <mat-icon>person_add</mat-icon>
+            <span>Sign up</span>
+          </div>
         </div>
       }
     </div>
-  }
+  </div>
 </header>
 
-<!-- Account Menu -->
+<!-- Account Menu (Desktop Only) -->
 <mat-menu #accountMenu="matMenu">
-
   @if (!isAuthenticated()) {
     <button mat-menu-item (click)="login()">
       <mat-icon>login</mat-icon>
@@ -86,9 +118,7 @@
       <mat-icon>person_add</mat-icon>
       Sign up
     </button>
-
   } @else {
-
     <div class="menu-header">
       <mat-icon>account_circle</mat-icon>
       <div>
@@ -112,7 +142,5 @@
       <mat-icon>logout</mat-icon>
       Logout
     </button>
-
   }
-
 </mat-menu>
