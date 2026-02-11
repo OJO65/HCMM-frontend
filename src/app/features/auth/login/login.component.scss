@@ -20,6 +20,7 @@ $grad: linear-gradient(135deg, #667eea, #764ba2);
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   align-items: center;
+  
 
   @media (max-width: 968px) {
     grid-template-columns: 1fr;
@@ -29,10 +30,9 @@ $grad: linear-gradient(135deg, #667eea, #764ba2);
 
 .login-card {
   width: 100%;
-  padding: 2rem;
+  padding: 28px 28px 32px;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-
   @media (max-width: 768px) {
     padding: 1.5rem;
   }
@@ -42,7 +42,7 @@ $grad: linear-gradient(135deg, #667eea, #764ba2);
   display: flex;
   align-items: start;
   flex-direction: column;
-  margin-top: 50px;
+  
 }
 
 .logo-text {
@@ -53,24 +53,20 @@ $grad: linear-gradient(135deg, #667eea, #764ba2);
   -webkit-text-fill-color: transparent;
 }
 
-mat-card-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
 .logo-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 1rem;
+  text-align: center;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-.logo-image {
-  height: 150px;
-  display: flex;
-  justify-content: center;
+.logo-section img {
+  height: 200px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .app-title {
@@ -88,7 +84,7 @@ mat-card-header {
   font-size: 1.5rem;
   font-weight: 600;
   color: #1a202c;
-  margin: 0 0 0.5rem 0;
+
   text-align: center;
 }
 
