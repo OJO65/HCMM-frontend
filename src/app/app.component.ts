@@ -4,10 +4,11 @@ import { CommonModule } from '@angular/common';
 import { HeaderComponent } from './core/layout/header/header.component';
 import { FooterComponent } from './core/layout/footer/footer.component';
 import { filter } from 'rxjs/operators';
+import { DevToolbarComponent } from './dev-toolbar.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, CommonModule, HeaderComponent, FooterComponent],
+  imports: [RouterOutlet, CommonModule, HeaderComponent, FooterComponent, DevToolbarComponent],
   standalone: true,
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
