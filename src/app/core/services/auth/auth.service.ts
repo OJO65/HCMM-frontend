@@ -233,4 +233,160 @@ export class AuthService {
   getUserRole(): UserRole | null {
     return this.currentUser()?.role || null;
   }
+
+  // ADD THESE METHODS TO YOUR auth.service.ts
+// (Place them at the end of the class, before the closing brace)
+
+  // ============================================================================
+  // MOCK LOGIN METHODS - FOR DEVELOPMENT/TESTING ONLY
+  // Remove before production deployment
+  // ============================================================================
+
+  /**
+   * Mock login as customer for testing UI without backend
+   */
+  mockLoginAsCustomer(): void {
+    const mockUser: User = {
+      id: 'user_123',
+      email: 'john@test.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      role: UserRole.CUSTOMER,
+      phone: '+254712345678',
+      isVerified: true,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      customerProfile: {
+        totalOrders: 24,
+        savedAddresses: [],
+        defaultAddress: {
+          address: '123 Main Street, Milimani, Kisumu',
+          latitude: -0.0917,
+          longitude: 34.7680,
+          label: 'Home',
+          
+        },
+      },
+    };
+
+    this.mockLogin(mockUser);
+  }
+
+  /**
+   * Mock login as cook for testing UI without backend
+   */
+  mockLoginAsCook(): void {
+    const mockUser: User = {
+      id: 'cook_123',
+      email: 'chef@test.com',
+      firstName: 'Maria',
+      lastName: 'Chef',
+      role: UserRole.COOK,
+      phone: '+254712345678',
+      isVerified: true,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      cookProfile: {
+        specialties: ['Italian', 'Kenyan'],
+        averageRating: 4.8,
+        totalReviews: 120,
+        totalOrders: 500,
+        isVerified: true,
+        businessName: "Maria's Kitchen",
+        location: {
+          address: '456 Chef Street, Kisumu',
+          latitude: -0.0917,
+          longitude: 34.7680,
+        },
+      },
+    };
+
+    this.mockLogin(mockUser);
+  }
+
+  /**
+   * Mock login as delivery person for testing UI without backend
+   */
+  mockLoginAsDelivery(): void {
+    const mockUser: User = {
+      id: 'delivery_123',
+      email: 'driver@test.com',
+      firstName: 'James',
+      lastName: 'Driver',
+      role: UserRole.DELIVERY_GUY,
+      phone: '+254712345678',
+      isVerified: true,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deliveryGuyProfile: {
+        vehicleType: 'motorcycle',
+        vehicleNumber: 'KAA 123X',
+        licenseNumber: 'DL12345',
+        isAvailable: true,
+        totalDeliveries: 250,
+        averageRating: 4.9,
+        currentLocation: {
+          latitude: -0.0917,
+          longitude: 34.7680,
+        },
+      },
+    };
+
+    this.mockLogin(mockUser);
+  }
+
+  /**
+   * Mock login as admin for testing UI without backend
+   */
+  mockLoginAsAdmin(): void {
+    const mockUser: User = {
+      id: 'admin_123',
+      email: 'admin@test.com',
+      firstName: 'Admin',
+      lastName: 'User',
+      role: UserRole.ADMIN,
+      phone: '+254712345678',
+      isVerified: true,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    this.mockLogin(mockUser);
+  }
+
+  /**
+   * Core mock login logic
+   */
+  private mockLogin(user: User): void {
+    const mockToken = 'mock_jwt_token_' + Date.now();
+    const mockRefreshToken = 'mock_refresh_token_' + Date.now();
+
+    // Store tokens and user using your StorageService
+    this.storage.setAccessToken(mockToken);
+    this.storage.setRefreshToken(mockRefreshToken);
+    this.storage.setUser(user);
+
+    // Update signals
+    this.setCurrentUser(user);
+
+    console.log('🎭 Mock login successful:', {
+      role: user.role,
+      name: `${user.firstName} ${user.lastName}`,
+      email: user.email,
+    });
+
+    // Navigate to role dashboard
+    this.navigateToRoleDashboard(user.role);
+  }
+
+  /**
+   * Mock logout - same as regular logout
+   */
+  mockLogout(): void {
+    this.logout();
+  }
 }
