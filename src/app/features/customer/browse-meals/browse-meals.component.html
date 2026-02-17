@@ -1,1 +1,368 @@
-<p>browse-meals works!</p>
+<div class="browse-meals">
+
+  <!-- ══════════════════════════════════════════════
+       SEARCH HERO
+  ══════════════════════════════════════════════ -->
+  <div class="search-hero">
+    <div class="search-hero-content">
+      <h1 class="hero-title">What are you craving?</h1>
+      <p class="hero-subtitle">Fresh meals from local home cooks, delivered to you</p>
+
+      <div class="search-bar">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          class="search-input"
+          type="text"
+          placeholder="Search meals, cooks, cuisines..."
+          [value]="searchQuery()"
+          (input)="onSearchInput($any($event.target).value)"
+          aria-label="Search meals"/>
+        @if (searchQuery()) {
+          <button class="clear-btn" (click)="clearSearch()" aria-label="Clear search">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       CATEGORY PILLS (sticky)
+  ══════════════════════════════════════════════ -->
+  <div class="category-bar">
+    <div class="category-scroll">
+      @for (cat of categories; track cat.id) {
+        <button
+          class="category-pill"
+          [class.active]="activeFilters().category === cat.id"
+          (click)="selectCategory(cat.id)"
+          [attr.aria-pressed]="activeFilters().category === cat.id"
+          [attr.aria-label]="cat.label + ' category'">
+          <mat-icon class="pill-icon">{{ cat.icon }}</mat-icon>
+          <span>{{ cat.label }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TOOLBAR (results count + sort + filter toggle)
+  ══════════════════════════════════════════════ -->
+  <div class="page-body">
+    <div class="toolbar">
+      <div class="results-meta">
+        @if (!loading()) {
+          <span class="results-count">
+            <strong>{{ resultCount() }}</strong> meal{{ resultCount() !== 1 ? 's' : '' }} found
+          </span>
+          @if (searchQuery()) {
+            <span class="search-term">for "<em>{{ searchQuery() }}</em>"</span>
+          }
+        }
+      </div>
+
+      <div class="toolbar-actions">
+        <!-- Sort dropdown -->
+        <div class="sort-wrapper">
+          <mat-icon class="sort-icon">sort</mat-icon>
+          <select
+            class="sort-select"
+            [value]="activeFilters().sortBy"
+            (change)="updateSort($any($event.target).value)"
+            aria-label="Sort meals">
+            @for (opt of sortOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Filter toggle button -->
+        <button
+          class="filter-toggle"
+          [class.active]="filtersOpen()"
+          (click)="toggleFilters()"
+          [attr.aria-expanded]="filtersOpen()"
+          aria-controls="filter-panel">
+          <mat-icon>tune</mat-icon>
+          <span>Filters</span>
+          @if (activeFilterCount() > 0) {
+            <span class="filter-badge">{{ activeFilterCount() }}</span>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         FILTER PANEL (collapsible)
+    ══════════════════════════════════════════════ -->
+    <div
+      id="filter-panel"
+      class="filter-panel"
+      [class.open]="filtersOpen()"
+      role="region"
+      aria-label="Meal filters">
+
+      <div class="filter-grid">
+
+        <!-- Max Price -->
+        <div class="filter-group">
+          <label class="filter-label">
+            <mat-icon>payments</mat-icon>
+            Max Price: <strong>KES {{ activeFilters().maxPrice }}</strong>
+          </label>
+          <input
+            type="range"
+            class="range-slider"
+            min="100" max="2000" step="50"
+            [value]="activeFilters().maxPrice"
+            (input)="updateMaxPrice(+$any($event.target).value)"
+            aria-label="Maximum price"/>
+          <div class="range-labels">
+            <span>KES 100</span>
+            <span>KES 2,000</span>
+          </div>
+        </div>
+
+        <!-- Max Prep Time -->
+        <div class="filter-group">
+          <label class="filter-label">
+            <mat-icon>schedule</mat-icon>
+            Max Prep Time: <strong>{{ activeFilters().maxPrepTime }} min</strong>
+          </label>
+          <input
+            type="range"
+            class="range-slider"
+            min="5" max="120" step="5"
+            [value]="activeFilters().maxPrepTime"
+            (input)="updateMaxPrepTime(+$any($event.target).value)"
+            aria-label="Maximum preparation time"/>
+          <div class="range-labels">
+            <span>5 min</span>
+            <span>120 min</span>
+          </div>
+        </div>
+
+        <!-- Min Rating -->
+        <div class="filter-group">
+          <label class="filter-label">
+            <mat-icon>star</mat-icon>
+            Minimum Rating: <strong>{{ activeFilters().minRating > 0 ? activeFilters().minRating + '★' : 'Any' }}</strong>
+          </label>
+          <div class="rating-buttons">
+            @for (r of [0, 3, 3.5, 4, 4.5]; track r) {
+              <button
+                class="rating-btn"
+                [class.active]="activeFilters().minRating === r"
+                (click)="updateMinRating(r)"
+                [attr.aria-label]="r === 0 ? 'Any rating' : r + ' stars and above'">
+                {{ r === 0 ? 'Any' : r + '★+' }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Dietary Tags -->
+        <div class="filter-group full-width">
+          <label class="filter-label">
+            <mat-icon>eco</mat-icon>
+            Dietary Preferences
+          </label>
+          <div class="dietary-chips">
+            @for (tag of dietaryOptions; track tag) {
+              <button
+                class="dietary-chip"
+                [class.active]="isDietaryActive(tag)"
+                (click)="toggleDietaryTag(tag)"
+                [attr.aria-pressed]="isDietaryActive(tag)">
+                {{ tag }}
+              </button>
+            }
+          </div>
+        </div>
+
+      </div>
+
+      <div class="filter-footer">
+        <button class="reset-btn" (click)="resetFilters()">
+          <mat-icon>refresh</mat-icon>
+          Reset Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SKELETON LOADING
+    ══════════════════════════════════════════════ -->
+    @if (loading()) {
+      <div class="meals-grid">
+        @for (item of skeletonItems; track $index) {
+          <div class="meal-skeleton">
+            <div class="skeleton-image shimmer"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line wide shimmer"></div>
+              <div class="skeleton-line medium shimmer"></div>
+              <div class="skeleton-line narrow shimmer"></div>
+              <div class="skeleton-footer">
+                <div class="skeleton-pill shimmer"></div>
+                <div class="skeleton-price shimmer"></div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════
+         MEALS GRID
+    ══════════════════════════════════════════════ -->
+    @if (!loading() && hasResults()) {
+      <div class="meals-grid" role="list" aria-label="Available meals">
+        @for (meal of paginatedMeals(); track trackByMealId($index, meal)) {
+          <article
+            class="meal-card"
+            role="listitem"
+            (click)="viewMeal(meal.id)"
+            (keydown.enter)="viewMeal(meal.id)"
+            tabindex="0"
+            [attr.aria-label]="meal.name + ' by ' + meal.cookName">
+
+            <!-- Image area -->
+            <div class="card-image">
+              <div class="image-placeholder">
+                <mat-icon>restaurant</mat-icon>
+              </div>
+
+              <!-- Badges overlay -->
+              <div class="card-badges">
+                @if (meal.isPopular) {
+                  <span class="badge popular">🔥 Popular</span>
+                }
+                @for (tag of meal.tags?.slice(0, 1); track tag) {
+                  <span class="badge tag">{{ tag }}</span>
+                }
+              </div>
+
+              <!-- Rating overlay -->
+              @if (meal.rating) {
+                <div class="card-rating">
+                  <mat-icon class="star-icon">star</mat-icon>
+                  <span class="rating-value">{{ meal.rating }}</span>
+                  <span class="rating-count">({{ meal.reviewCount }})</span>
+                </div>
+              }
+            </div>
+
+            <!-- Card body -->
+            <div class="card-body">
+              <div class="card-header-row">
+                <h3 class="meal-name">{{ meal.name }}</h3>
+              </div>
+
+              <p class="cook-name">
+                <mat-icon class="cook-icon">storefront</mat-icon>
+                {{ meal.cookName }}
+              </p>
+
+              <p class="meal-description">{{ meal.description }}</p>
+
+              <!-- Dietary tags -->
+              @if (meal.dietaryTags?.length) {
+                <div class="dietary-tags">
+                  @for (tag of meal.dietaryTags?.slice(0, 3); track tag) {
+                    <span class="dietary-tag">{{ tag }}</span>
+                  }
+                </div>
+              }
+
+              <!-- Card footer -->
+              <div class="card-footer">
+                <div class="meta-row">
+                  <span class="prep-time">
+                    <mat-icon>schedule</mat-icon>
+                    {{ meal.prepTime }} min
+                  </span>
+                  <span class="cuisine-tag">{{ meal.cuisine }}</span>
+                </div>
+
+                <div class="price-row">
+                  <span class="price">{{ meal.price | currencyKes }}</span>
+                  <button
+                    class="add-btn"
+                    (click)="viewMeal(meal.id); $event.stopPropagation()"
+                    aria-label="View {{ meal.name }}">
+                    <mat-icon>arrow_forward</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </article>
+        }
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           PAGINATION
+      ══════════════════════════════════════════════ -->
+      @if (totalPages() > 1) {
+        <nav class="pagination" aria-label="Meal pages">
+          <button
+            class="page-btn nav"
+            [disabled]="currentPage() === 1"
+            (click)="goToPage(currentPage() - 1)"
+            aria-label="Previous page">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+
+          @for (page of pageNumbers(); track page) {
+            <button
+              class="page-btn"
+              [class.active]="currentPage() === page"
+              (click)="goToPage(page)"
+              [attr.aria-label]="'Page ' + page"
+              [attr.aria-current]="currentPage() === page ? 'page' : null">
+              {{ page }}
+            </button>
+          }
+
+          <button
+            class="page-btn nav"
+            [disabled]="!hasMorePages()"
+            (click)="goToPage(currentPage() + 1)"
+            aria-label="Next page">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </nav>
+      }
+    }
+
+    <!-- ══════════════════════════════════════════════
+         EMPTY STATE
+    ══════════════════════════════════════════════ -->
+    @if (!loading() && !hasResults()) {
+      <div class="empty-state">
+        <div class="empty-illustration">
+          <mat-icon>search_off</mat-icon>
+        </div>
+        <h2>No meals found</h2>
+        <p>
+          @if (searchQuery()) {
+            We couldn't find any meals matching "<strong>{{ searchQuery() }}</strong>".
+          } @else {
+            No meals match your current filters.
+          }
+        </p>
+        <div class="empty-actions">
+          @if (searchQuery()) {
+            <button class="empty-btn secondary" (click)="clearSearch()">
+              Clear Search
+            </button>
+          }
+          <button class="empty-btn primary" (click)="resetFilters()">
+            Reset All Filters
+          </button>
+        </div>
+      </div>
+    }
+
+  </div><!-- /page-body -->
+</div>
