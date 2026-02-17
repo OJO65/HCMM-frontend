@@ -1,1 +1,266 @@
-<p>customer-dashboard works!</p>
+<div class="customer-dashboard">
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="60"></mat-spinner>
+      <p class="loading-text">Loading your dashboard...</p>
+    </div>
+  }
+
+  <!-- Dashboard Content -->
+  @if (!loading()) {
+    <!-- Welcome Section -->
+    <section class="welcome-section">
+      <div class="welcome-content">
+        <h1 class="greeting-text">{{ greeting() }}</h1>
+        <p class="welcome-subtitle">Ready to enjoy some delicious meals?</p>
+      </div>
+      <button 
+        mat-fab 
+        extended 
+        color="primary" 
+        class="browse-button"
+        (click)="navigateTo('/customer/browse-meals')"
+        aria-label="Browse available meals">
+        <mat-icon>restaurant_menu</mat-icon>
+        Browse Meals
+      </button>
+    </section>
+
+    <!-- Stats Cards -->
+    <section class="stats-section" role="region" aria-label="Account statistics">
+      <div class="stats-grid">
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-icon-wrapper primary">
+              <mat-icon>receipt_long</mat-icon>
+            </div>
+            <div class="stat-details">
+              <p class="stat-value">{{ stats().totalOrders }}</p>
+              <p class="stat-label">Total Orders</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-icon-wrapper accent">
+              <mat-icon>local_shipping</mat-icon>
+            </div>
+            <div class="stat-details">
+              <p class="stat-value">{{ stats().activeOrders }}</p>
+              <p class="stat-label">Active Orders</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-icon-wrapper warn">
+              <mat-icon>favorite</mat-icon>
+            </div>
+            <div class="stat-details">
+              <p class="stat-value">{{ stats().favoriteCount }}</p>
+              <p class="stat-label">Favorites</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-icon-wrapper success">
+              <mat-icon>account_balance_wallet</mat-icon>
+            </div>
+            <div class="stat-details">
+              <p class="stat-value">{{ stats().totalSpent | currencyKes }}</p>
+              <p class="stat-label">Total Spent</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions-section" role="navigation" aria-label="Quick actions">
+      <h2 class="section-title">Quick Actions</h2>
+      <div class="actions-grid">
+        @for (action of quickActions(); track action.route) {
+          <button
+            mat-raised-button
+            [color]="action.color"
+            class="action-button"
+            (click)="navigateTo(action.route)"
+            [matTooltip]="action.label"
+            [attr.aria-label]="action.label">
+            <mat-icon [matBadge]="action.badge || null" 
+                      [matBadgeHidden]="!action.badge || action.badge === 0"
+                      matBadgeColor="warn"
+                      matBadgeSize="small">
+              {{ action.icon }}
+            </mat-icon>
+            <span class="action-label">{{ action.label }}</span>
+          </button>
+        }
+      </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+      <!-- Recent Orders Section -->
+      <section class="recent-orders-section" role="region" aria-label="Recent orders">
+        <div class="section-header">
+          <h2 class="section-title">
+            <mat-icon>receipt_long</mat-icon>
+            Recent Orders
+          </h2>
+          @if (hasRecentOrders()) {
+            <button 
+              mat-button 
+              color="primary"
+              (click)="navigateTo('/customer/orders')"
+              aria-label="View all orders">
+              View All
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          }
+        </div>
+
+        @if (hasRecentOrders()) {
+          <div class="orders-list">
+            @for (order of recentOrders(); track order.id) {
+              <mat-card class="order-card" (click)="viewOrderDetail(order.id)">
+                <mat-card-content>
+                  <div class="order-header">
+                    <div class="order-info">
+                      <h3 class="order-cook-name">{{ order.cookName }}</h3>
+                      <p class="order-time">{{ order.createdAt | timeAgo }}</p>
+                    </div>
+                    <mat-chip 
+                      [color]="getStatusColor(order.status)"
+                      class="status-chip">
+                      <mat-icon class="status-icon">{{ getStatusIcon(order.status) }}</mat-icon>
+                      {{ formatStatus(order.status) }}
+                    </mat-chip>
+                  </div>
+
+                  <mat-divider></mat-divider>
+
+                  <div class="order-items">
+                    @for (item of order.items; track item.mealId) {
+                      <div class="order-item">
+                        <span class="item-quantity">{{ item.quantity }}×</span>
+                        <span class="item-name">{{ item.mealName }}</span>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="order-footer">
+                    <div class="order-total">
+                      <span class="total-label">Total:</span>
+                      <span class="total-amount">{{ order.total | currencyKes }}</span>
+                    </div>
+                    @if (order.status === 'delivering' && order.estimatedDeliveryTime) {
+                      <div class="delivery-estimate">
+                        <mat-icon class="estimate-icon">schedule</mat-icon>
+                        <span>Est. {{ order.estimatedDeliveryTime | date:'shortTime' }}</span>
+                      </div>
+                    }
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            }
+          </div>
+        } @else {
+          <mat-card class="empty-state">
+            <mat-card-content>
+              <mat-icon class="empty-icon">receipt_long</mat-icon>
+              <h3>No Orders Yet</h3>
+              <p>Start exploring delicious meals from local cooks!</p>
+              <button 
+                mat-raised-button 
+                color="primary"
+                (click)="navigateTo('/customer/browse-meals')">
+                Browse Meals
+              </button>
+            </mat-card-content>
+          </mat-card>
+        }
+      </section>
+
+      <!-- Recommended Meals Section -->
+      <section class="recommended-section" role="region" aria-label="Recommended meals">
+        <div class="section-header">
+          <h2 class="section-title">
+            <mat-icon>recommend</mat-icon>
+            Recommended For You
+          </h2>
+        </div>
+
+        @if (hasRecommendations()) {
+          <div class="meals-grid">
+            @for (meal of recommendedMeals(); track meal.id) {
+              <mat-card class="meal-card" (click)="viewMealDetail(meal.id)">
+                <div class="meal-image-wrapper">
+                  <div class="meal-image-placeholder">
+                    <mat-icon>restaurant</mat-icon>
+                  </div>
+                  @if (meal.rating) {
+                    <div class="meal-rating">
+                      <mat-icon class="rating-icon">star</mat-icon>
+                      <span>{{ meal.rating }}</span>
+                      <span class="review-count">({{ meal.reviewCount }})</span>
+                    </div>
+                  }
+                </div>
+                <mat-card-content>
+                  <h3 class="meal-name">{{ meal.name }}</h3>
+                  <p class="meal-cook">{{ meal.cookName }}</p>
+                  <p class="meal-description">{{ meal.description }}</p>
+                  
+                  <div class="meal-tags">
+                    @for (tag of meal.tags?.slice(0, 2); track tag) {
+                      <mat-chip class="meal-tag">{{ tag }}</mat-chip>
+                    }
+                  </div>
+
+                  <div class="meal-footer">
+                    <div class="meal-info">
+                      <mat-icon class="info-icon">schedule</mat-icon>
+                      <span>{{ meal.prepTime }} min</span>
+                    </div>
+                    <div class="meal-price">{{ meal.price | currencyKes }}</div>
+                  </div>
+                </mat-card-content>
+                <mat-card-actions>
+                  <button 
+                    mat-button 
+                    color="primary"
+                    (click)="viewMealDetail(meal.id); $event.stopPropagation()"
+                    aria-label="View meal details">
+                    View Details
+                  </button>
+                  <button 
+                    mat-icon-button 
+                    color="accent"
+                    (click)="$event.stopPropagation()"
+                    matTooltip="Add to favorites"
+                    aria-label="Add to favorites">
+                    <mat-icon>favorite_border</mat-icon>
+                  </button>
+                </mat-card-actions>
+              </mat-card>
+            }
+          </div>
+        } @else {
+          <mat-card class="empty-state">
+            <mat-card-content>
+              <mat-icon class="empty-icon">restaurant_menu</mat-icon>
+              <h3>No Recommendations</h3>
+              <p>Browse meals to get personalized recommendations</p>
+            </mat-card-content>
+          </mat-card>
+        }
+      </section>
+    </div>
+  }
+</div>
