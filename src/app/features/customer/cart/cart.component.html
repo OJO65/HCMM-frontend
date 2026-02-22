@@ -1,1 +1,219 @@
-<p>cart works!</p>
+<div class="cart-page">
+
+  <!-- LOADING STATE -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="60"></mat-spinner>
+    <p>Loading your cart...</p>
+  </div>
+
+  <!-- EMPTY CART -->
+  <div *ngIf="!loading && isEmpty()" class="empty-cart">
+    <div class="empty-icon">
+      <mat-icon>shopping_cart</mat-icon>
+    </div>
+    <h2>Your cart is empty</h2>
+    <p>Add some delicious meals to get started!</p>
+    <button class="browse-btn" (click)="continueShopping()">
+      <mat-icon>restaurant_menu</mat-icon>
+      Browse Meals
+    </button>
+  </div>
+
+  <!-- CART CONTENT -->
+  <div *ngIf="!loading && !isEmpty()">
+
+    <!-- HEADER -->
+    <div class="cart-header">
+      <h1>Your Cart</h1>
+      <button class="text-btn" (click)="clearCart()">
+        <mat-icon>delete_outline</mat-icon>
+        Clear Cart
+      </button>
+    </div>
+
+    <!-- FREE DELIVERY -->
+    <div *ngIf="amountToFreeDelivery() > 0" class="free-delivery-banner">
+      <div class="banner-text">
+        <mat-icon>local_shipping</mat-icon>
+        <span>
+          Add <strong>{{ amountToFreeDelivery() | currencyKes }}</strong>
+          more for free delivery!
+        </span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="freeDeliveryProgress()"></div>
+      </div>
+    </div>
+    <div *ngIf="amountToFreeDelivery() === 0" class="free-delivery-banner success">
+      <mat-icon>check_circle</mat-icon>
+      <span>You've unlocked <strong>free delivery</strong> 🎉</span>
+    </div>
+
+    <div class="cart-layout">
+
+      <!-- LEFT SIDE: CHECKOUT STEPPER -->
+      <div class="checkout-section">
+        <mat-stepper linear>
+
+          <!-- STEP 1: REVIEW CART -->
+          <mat-step label="Review Cart" [completed]="!isEmpty()">
+
+            <div class="cart-items">
+              <div *ngFor="let item of cart.items(); trackBy: trackByItemId" class="cart-item">
+
+                <div class="item-details">
+                  <h3>{{ item.meal.name }}</h3>
+
+                  <div *ngIf="item.addOns.length > 0" class="item-addons">
+                    <span *ngFor="let addon of item.addOns; trackBy: trackByAddonId">
+  {{ addon.name }}
+</span>
+
+                  </div>
+
+                  <p *ngIf="item.specialInstructions" class="item-instructions">
+                    {{ item.specialInstructions }}
+                  </p>
+                </div>
+
+                <!-- CONTROLS -->
+                <div class="item-controls">
+
+                  <div class="quantity-controls">
+                    <button
+                      class="qty-btn"
+                      (click)="decrementQuantity(item.id, item.quantity)"
+                      [disabled]="item.quantity <= 1">
+                      <mat-icon>remove</mat-icon>
+                    </button>
+
+                    <span class="qty-value">{{ item.quantity }}</span>
+
+                    <button
+                      class="qty-btn"
+                      (click)="incrementQuantity(item.id, item.quantity)">
+                      <mat-icon>add</mat-icon>
+                    </button>
+                  </div>
+
+                  <div class="item-price">{{ getItemTotal(item) | currencyKes }}</div>
+
+                  <button class="remove-btn" (click)="removeItem(item.id)">
+                    <mat-icon>close</mat-icon>
+                  </button>
+
+                </div>
+              </div>
+            </div>
+
+            <div class="step-actions">
+              <button class="secondary-btn" (click)="continueShopping()">Add More Items</button>
+              <button class="primary-btn" matStepperNext>
+                Proceed to Delivery
+                <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+
+          </mat-step>
+
+          <!-- STEP 2: DELIVERY -->
+          <mat-step label="Delivery" [stepControl]="deliveryForm">
+            <form [formGroup]="deliveryForm">
+              <mat-form-field appearance="outline">
+                <mat-label>Delivery Address</mat-label>
+                <textarea matInput formControlName="address"></textarea>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Phone</mat-label>
+                <input matInput formControlName="phone"/>
+              </mat-form-field>
+            </form>
+
+            <div class="step-actions">
+              <button matStepperPrevious>Back</button>
+              <button matStepperNext [disabled]="!deliveryForm.valid">Continue</button>
+            </div>
+          </mat-step>
+
+          <!-- STEP 3: PAYMENT -->
+          <mat-step label="Payment" [stepControl]="paymentForm">
+
+            <div class="payment-methods">
+              <button class="payment-method"
+                      [class.active]="selectedPaymentMethod === 'mpesa'"
+                      (click)="setPaymentMethod('mpesa')">M-Pesa</button>
+              <button class="payment-method"
+                      [class.active]="selectedPaymentMethod === 'card'"
+                      (click)="setPaymentMethod('card')">Card</button>
+              <button class="payment-method"
+                      [class.active]="selectedPaymentMethod === 'cash'"
+                      (click)="setPaymentMethod('cash')">Cash</button>
+            </div>
+
+            <form [formGroup]="paymentForm">
+              <mat-form-field *ngIf="selectedPaymentMethod === 'mpesa'" appearance="outline">
+                <mat-label>M-Pesa Phone</mat-label>
+                <input matInput formControlName="mpesaPhone"/>
+              </mat-form-field>
+
+              <mat-form-field *ngIf="selectedPaymentMethod === 'card'" appearance="outline">
+                <mat-label>Card Number</mat-label>
+                <input matInput formControlName="cardNumber"/>
+              </mat-form-field>
+
+              <div *ngIf="selectedPaymentMethod === 'cash'" class="info-box">
+                Pay on delivery
+              </div>
+            </form>
+
+            <div class="step-actions">
+              <button matStepperPrevious>Back</button>
+
+              <button class="primary-btn"
+                      (click)="placeOrder()"
+                      [disabled]="!paymentForm.valid || processingOrder">
+
+                <mat-spinner *ngIf="processingOrder" diameter="20"></mat-spinner>
+                <span *ngIf="!processingOrder">Place Order · {{ total() | currencyKes }}</span>
+
+              </button>
+            </div>
+
+          </mat-step>
+
+        </mat-stepper>
+      </div>
+
+      <!-- RIGHT SUMMARY -->
+      <div class="summary-section">
+        <div class="order-summary">
+
+          <div class="summary-row">
+            <span>Subtotal ({{ itemCount() }} items)</span>
+            <span>{{ subtotal() | currencyKes }}</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Delivery</span>
+            <span>{{ deliveryFee() === 0 ? 'FREE' : (deliveryFee() | currencyKes) }}</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Service Fee</span>
+            <span>{{ serviceFee() | currencyKes }}</span>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="summary-row total">
+            <span>Total</span>
+            <span>{{ total() | currencyKes }}</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
