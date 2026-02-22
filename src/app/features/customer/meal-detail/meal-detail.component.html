@@ -1,1 +1,281 @@
-<p>meal-detail works!</p>
+<div class="meal-detail">
+
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="60"></mat-spinner>
+      <p>Loading meal details...</p>
+    </div>
+  } @else if (meal()) {
+
+    <!-- Back Button -->
+    <button class="back-btn" (click)="goBack()" aria-label="Go back">
+      <mat-icon>arrow_back</mat-icon>
+      <span>Back to Browse</span>
+    </button>
+
+    <!-- Main Grid -->
+    <div class="content-grid">
+
+      <!-- LEFT: Gallery -->
+      <div class="gallery-section">
+
+        <div class="main-image">
+          <div class="image-placeholder">
+            <mat-icon>restaurant</mat-icon>
+          </div>
+
+          <button
+            class="fav-btn"
+            [class.active]="isFavorite()"
+            (click)="toggleFavorite()"
+            [attr.aria-label]="isFavorite() ? 'Remove from favorites' : 'Add to favorites'">
+            <mat-icon>{{ isFavorite() ? 'favorite' : 'favorite_border' }}</mat-icon>
+          </button>
+        </div>
+
+        <div class="thumbnails">
+          @for (img of images(); track $index) {
+            <button
+              class="thumbnail"
+              [class.active]="selectedImageIndex() === $index"
+              (click)="selectImage($index)">
+              <div class="thumb-placeholder">
+                <mat-icon>image</mat-icon>
+              </div>
+            </button>
+          }
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Details -->
+      <div class="details-section">
+
+        <div class="meal-header">
+
+          <div class="header-top">
+            <h1 class="meal-name">{{ meal()!.name }}</h1>
+
+            @if (meal()!.tags?.length) {
+              <div class="tags">
+                @for (tag of meal()!.tags; track tag) {
+                  <span class="tag">{{ tag }}</span>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Rating -->
+          <div class="rating-row">
+            <div class="stars">
+              @for (filled of getStarArray(meal()!.rating ?? 0); track $index) {
+                <mat-icon class="star" [class.filled]="filled">
+                  {{ filled ? 'star' : 'star_border' }}
+                </mat-icon>
+              }
+            </div>
+            <span class="rating-value">{{ meal()!.rating }}</span>
+            <span class="rating-count">({{ meal()!.reviewCount }} reviews)</span>
+          </div>
+
+          <!-- Cook -->
+          <div class="cook-info">
+            <mat-icon class="cook-icon">storefront</mat-icon>
+            <span class="cook-name">{{ meal()!.cookName }}</span>
+          </div>
+
+          <!-- Badges -->
+          <div class="meta-badges">
+            <span class="badge">
+              <mat-icon>schedule</mat-icon>
+              {{ meal()!.prepTime }} min
+            </span>
+            <span class="badge">
+              <mat-icon>restaurant</mat-icon>
+              {{ meal()!.cuisine }}
+            </span>
+
+            @if (meal()!.dietaryTags?.length) {
+              @for (dietary of meal()!.dietaryTags?.slice(0, 2); track dietary) {
+                <span class="badge dietary">
+                  <mat-icon>eco</mat-icon>
+                  {{ dietary }}
+                </span>
+              }
+            }
+          </div>
+
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Description -->
+        <div class="description-section">
+          <h3>Description</h3>
+          <p>{{ meal()!.description }}</p>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Add-ons -->
+        <div class="addons-section">
+          <h3>Add-ons</h3>
+          <p class="addons-subtitle">Customize your meal</p>
+
+          <div class="addons-list">
+            @for (addon of addOns(); track addon.id) {
+              <button
+                class="addon-item"
+                [class.selected]="addon.selected"
+                (click)="toggleAddOn(addon.id)"
+                [attr.aria-pressed]="addon.selected">
+
+                <div class="addon-info">
+                  <span class="addon-name">{{ addon.name }}</span>
+                  <span class="addon-price">
+                    +{{ addon.price | currencyKes }}
+                  </span>
+                </div>
+
+                <mat-icon class="check-icon">
+                  {{ addon.selected ? 'check_circle' : 'radio_button_unchecked' }}
+                </mat-icon>
+
+              </button>
+            }
+          </div>
+
+          @if (selectedAddOns().length > 0) {
+            <div class="addons-summary">
+              <span>Add-ons total:</span>
+              <strong>{{ addOnsTotal() | currencyKes }}</strong>
+            </div>
+          }
+
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Instructions -->
+        <div class="instructions-section">
+          <h3>
+            Special Instructions
+            <span class="optional">(optional)</span>
+          </h3>
+
+          <textarea
+            class="instructions-input"
+            rows="3"
+            placeholder="Any allergies or special requests?"
+            [value]="specialInstructions()"
+            (input)="updateInstructions($any($event.target).value)"
+            maxlength="200">
+          </textarea>
+
+          <span class="char-count">
+            {{ specialInstructions().length }}/200
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Reviews -->
+    <div class="reviews-section">
+
+      <h2 class="section-title">Customer Reviews</h2>
+
+      <div class="reviews-list">
+        @for (review of displayedReviews(); track trackByReviewId($index, review)) {
+
+          <article class="review-card">
+
+            <div class="review-header">
+
+              <div class="reviewer-info">
+                <div class="avatar">
+                  <mat-icon>account_circle</mat-icon>
+                </div>
+
+                <div class="reviewer-details">
+                  <div class="reviewer-name">
+                    {{ review.customerName }}
+                  </div>
+                  <div class="review-date">
+                    {{ review.createdAt | timeAgo }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="review-stars">
+                @for (filled of getStarArray(review.rating); track $index) {
+                  <mat-icon class="star" [class.filled]="filled">
+                    {{ filled ? 'star' : 'star_border' }}
+                  </mat-icon>
+                }
+              </div>
+
+            </div>
+
+            <p class="review-comment">{{ review.comment }}</p>
+
+            <div class="review-footer">
+              <button class="helpful-btn">
+                <mat-icon>thumb_up</mat-icon>
+                Helpful ({{ review.helpfulCount }})
+              </button>
+            </div>
+
+          </article>
+
+        }
+      </div>
+
+    </div>
+
+  }
+
+  <!-- Sticky Add to Cart -->
+  @if (!loading() && meal()) {
+    <div class="add-to-cart-bar">
+      <div class="bar-content">
+
+        <div class="quantity-controls">
+          <button
+            class="qty-btn"
+            (click)="decrementQuantity()"
+            [disabled]="quantity() <= 1">
+            <mat-icon>remove</mat-icon>
+          </button>
+
+          <span class="qty-value">{{ quantity() }}</span>
+
+          <button
+            class="qty-btn"
+            (click)="incrementQuantity()">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+
+        <div class="cart-action">
+          <div class="price-display">
+            <span class="price-label">Total</span>
+            <span class="price-value">
+              {{ totalPrice() | currencyKes }}
+            </span>
+          </div>
+
+          <button
+            class="add-to-cart-btn"
+            (click)="addToCart()"
+            [disabled]="!canAddToCart()">
+            <mat-icon>shopping_cart</mat-icon>
+            Add to Cart
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+</div>
