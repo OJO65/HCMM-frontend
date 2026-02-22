@@ -8,7 +8,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { UserRole } from '../../../models/user.model';
-
+import { CartService } from '../../services/cart/cart.service';
 /* ---------- Nav Types ---------- */
 
 type NavRouteItem = {
@@ -75,13 +75,13 @@ const ROLE_NAV: Record<UserRole, NavRouteItem[]> = {
 export class HeaderComponent {
   private router = inject(Router);
   readonly authService = inject(AuthService);
-
+  private cartService = inject(CartService);
   readonly UserRole = UserRole;
 
   @Input() transparent = false;
 
   mobileMenuOpen = signal(false);
-  cartItemCount = signal(3); // connect later
+  cartItemCount = this.cartService.itemCount;
 
   currentUser = this.authService.currentUser;
   isAuthenticated = this.authService.isAuthenticated;
