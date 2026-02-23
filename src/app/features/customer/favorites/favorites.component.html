@@ -1,1 +1,137 @@
-<p>favorites works!</p>
+<div class="favorites-page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="header-text">
+      <h1 class="page-title">
+        <mat-icon class="title-icon">favorite</mat-icon>
+        Favorites
+      </h1>
+      <p class="page-subtitle">
+        @if (!isEmpty()) {
+          {{ favoritesService.count() }} saved meal{{ favoritesService.count() !== 1 ? 's' : '' }}
+        } @else {
+          Meals you love, saved for later
+        }
+      </p>
+    </div>
+
+    <!-- Sort -->
+    @if (!isEmpty()) {
+      <div class="sort-wrapper">
+        <mat-icon class="sort-icon">sort</mat-icon>
+        <select
+          class="sort-select"
+          [value]="sortBy()"
+          (change)="updateSort($any($event.target).value)"
+          aria-label="Sort favorites">
+          @for (opt of sortOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+    }
+  </div>
+
+  <!-- FAVORITES GRID -->
+  @if (!isEmpty()) {
+    <div class="favorites-grid" role="list">
+      @for (fav of sortedFavorites(); track trackById($index, fav)) {
+
+        <article
+          class="fav-card"
+          role="listitem"
+          (click)="viewMeal(fav.id)"
+          (keydown.enter)="viewMeal(fav.id)"
+          tabindex="0"
+          [attr.aria-label]="fav.name + ' by ' + fav.cookName">
+
+          <!-- Image area -->
+          <div class="card-image">
+            <div class="image-placeholder">
+              <mat-icon>restaurant</mat-icon>
+            </div>
+
+            <!-- Rating overlay -->
+            <div class="card-rating">
+              <mat-icon class="star-icon">star</mat-icon>
+              <span class="rating-value">{{ fav.rating }}</span>
+              <span class="rating-count">({{ fav.reviewCount }})</span>
+            </div>
+
+            <!-- Remove button -->
+            <button
+              class="remove-btn"
+              (click)="remove($event, fav.id)"
+              aria-label="Remove from favorites">
+              <mat-icon>favorite</mat-icon>
+            </button>
+          </div>
+
+          <!-- Card body -->
+          <div class="card-body">
+
+            <h3 class="meal-name">{{ fav.name }}</h3>
+
+            <p class="cook-name">
+              <mat-icon class="cook-icon">storefront</mat-icon>
+              {{ fav.cookName }}
+            </p>
+
+            <!-- Dietary tags -->
+            @if (fav.dietaryTags?.length) {
+              <div class="dietary-tags">
+                @for (tag of fav.dietaryTags!.slice(0, 3); track tag) {
+                  <span class="dietary-tag">{{ tag }}</span>
+                }
+              </div>
+            }
+
+            <!-- Card footer -->
+            <div class="card-footer">
+              <div class="meta-row">
+                <span class="prep-time">
+                  <mat-icon>schedule</mat-icon>
+                  {{ fav.prepTime }} min
+                </span>
+                <span class="cuisine-tag">{{ fav.cuisine }}</span>
+              </div>
+
+              <div class="price-row">
+                <span class="price">{{ fav.price | currencyKes }}</span>
+                <button
+                  class="view-btn"
+                  (click)="viewMeal(fav.id); $event.stopPropagation()"
+                  aria-label="View {{ fav.name }}">
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+
+              <span class="saved-at">
+                Saved {{ fav.savedAt | timeAgo }}
+              </span>
+            </div>
+
+          </div>
+        </article>
+
+      }
+    </div>
+  }
+
+  <!-- EMPTY STATE -->
+  @if (isEmpty()) {
+    <div class="empty-state">
+      <div class="empty-illustration">
+        <mat-icon>favorite_border</mat-icon>
+      </div>
+      <h2>No favorites yet</h2>
+      <p>Tap the heart on any meal to save it here for quick access later.</p>
+      <button class="primary-btn" (click)="browseMore()">
+        <mat-icon>restaurant_menu</mat-icon>
+        Browse Meals
+      </button>
+    </div>
+  }
+
+</div>
