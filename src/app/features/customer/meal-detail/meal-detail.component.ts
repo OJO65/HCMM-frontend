@@ -12,6 +12,7 @@ import { Location } from '@angular/common';
 
 import { CartItem, AddOn } from '../../../models/cart.model';
 import { CartService } from '../../../core/services/cart/cart.service';
+import { FavoritesService } from '../../../core/services/favorites/favorites.service';
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -62,6 +63,7 @@ export class MealDetailComponent implements OnInit {
   private router = inject(Router);
   private location = inject(Location);
   private cartService = inject(CartService);
+  private favoritesService = inject(FavoritesService);
 
   // ── State ──────────────────────────────────────────────────────────────────
   loading = signal(true);
@@ -71,13 +73,19 @@ export class MealDetailComponent implements OnInit {
   quantity = signal(1);
   addOns = signal<SelectableAddOn[]>([]);
   specialInstructions = signal('');
-  isFavorite = signal(false);
 
   selectedImageIndex = signal(0);
   reviewFilter = signal<ReviewFilter>('all');
   showAllReviews = signal(false);
 
   // ── Computed ───────────────────────────────────────────────────────────────
+
+  // Reads from FavoritesService — always reflects true persisted state
+  isFavorite = computed(() => {
+    const m = this.meal();
+    return m ? this.favoritesService.isFavorite(m.id) : false;
+  });
+
   totalPrice = computed(() => {
     const m = this.meal();
     if (!m) return 0;
@@ -173,8 +181,21 @@ export class MealDetailComponent implements OnInit {
   }
 
   toggleFavorite(): void {
-    this.isFavorite.update(v => !v);
-    // TODO: Call favorites service
+    const m = this.meal();
+    if (!m) return;
+
+    this.favoritesService.toggle({
+      id: m.id,
+      name: m.name,
+      cookName: m.cookName ?? '',
+      price: m.price,
+      rating: m.rating ?? 0,
+      reviewCount: m.reviewCount ?? 0,
+      cuisine: m.cuisine,
+      prepTime: m.prepTime,
+      dietaryTags: m.dietaryTags ?? [],
+      savedAt: new Date(),
+    });
   }
 
   setReviewFilter(filter: ReviewFilter): void {
@@ -200,7 +221,6 @@ export class MealDetailComponent implements OnInit {
         price: meal.price,
       },
       quantity: this.quantity(),
-      // Strip the local `selected` field — CartItem.AddOn only needs id/name/price
       addOns: this.selectedAddOns().map(({ id, name, price }) => ({ id, name, price })),
       specialInstructions: this.specialInstructions() || undefined,
     };
@@ -226,7 +246,6 @@ export class MealDetailComponent implements OnInit {
 
   // ── Private ────────────────────────────────────────────────────────────────
   private loadMeal(id: string): void {
-    // TODO: Replace with actual service call
     setTimeout(() => {
       const meal = this.getMockMeal(id);
       if (!meal) {
