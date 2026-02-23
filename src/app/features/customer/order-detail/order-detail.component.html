@@ -1,1 +1,226 @@
-<p>order-detail works!</p>
+<div class="order-detail-page">
+
+  <!-- BACK BUTTON -->
+  <button class="back-btn" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+    <span>My Orders</span>
+  </button>
+
+  <!-- LOADING -->
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="56"></mat-spinner>
+      <p>Loading order details...</p>
+    </div>
+  }
+
+  @if (!loading() && order()) {
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div>
+        <h1 class="order-id">{{ order()!.id }}</h1>
+        <p class="order-date">Placed {{ order()!.createdAt | timeAgo }}</p>
+      </div>
+
+      @if (isActive()) {
+        <div class="live-badge">
+          <span class="pulse-dot"></span>
+          Live Tracking
+        </div>
+      }
+    </div>
+
+    <!-- CANCELLED BANNER -->
+    @if (isCancelled()) {
+      <div class="cancelled-banner">
+        <mat-icon>cancel</mat-icon>
+        <div>
+          <strong>Order Cancelled</strong>
+          @if (order()!.cancellationReason) {
+            <p>{{ order()!.cancellationReason }}</p>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- STATUS TRACKER -->
+    @if (!isCancelled()) {
+      <div class="tracker-card">
+        <h2 class="section-title">
+          <mat-icon>local_shipping</mat-icon>
+          Order Status
+        </h2>
+
+        @if (isActive() && order()!.estimatedDeliveryTime) {
+          <div class="eta-row">
+            <mat-icon>schedule</mat-icon>
+            <span>Estimated arrival:
+              <strong>{{ order()!.estimatedDeliveryTime | date: 'h:mm a' }}</strong>
+            </span>
+          </div>
+        }
+
+        <div class="status-tracker">
+          @for (step of statusSteps(); track step.status; let i = $index) {
+            <div class="tracker-step" [attr.data-state]="getStepState(i)">
+
+              <div class="step-left">
+                <div class="step-circle">
+                  @if (getStepState(i) === 'completed') {
+                    <mat-icon>check</mat-icon>
+                  } @else {
+                    <mat-icon>{{ step.icon }}</mat-icon>
+                  }
+                </div>
+                @if (i < statusSteps().length - 1) {
+                  <div class="step-line"></div>
+                }
+              </div>
+
+              <div class="step-body">
+                <span class="step-label">{{ step.label }}</span>
+                @if (step.time && getStepState(i) !== 'upcoming') {
+                  <span class="step-time">{{ step.time | date: 'h:mm a' }}</span>
+                }
+              </div>
+
+            </div>
+          }
+        </div>
+
+        <!-- Delivery person -->
+        @if (order()!.deliveryPersonName && isActive()) {
+          <div class="delivery-person">
+            <div class="rider-avatar">
+              <mat-icon>directions_bike</mat-icon>
+            </div>
+            <div class="rider-info">
+              <span class="rider-label">Your delivery rider</span>
+              <span class="rider-name">{{ order()!.deliveryPersonName }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ORDER ITEMS -->
+    <div class="detail-card">
+      <h2 class="section-title">
+        <mat-icon>storefront</mat-icon>
+        {{ order()!.cookName }}
+      </h2>
+
+      <div class="items-list">
+        @for (item of order()!.items; track trackByMealId($index, item)) {
+          <div class="order-item">
+            <div class="item-qty-badge">{{ item.quantity }}×</div>
+            <div class="item-info">
+              <span class="item-name">{{ item.mealName }}</span>
+              @if (item.specialInstructions) {
+                <span class="item-note">{{ item.specialInstructions }}</span>
+              }
+            </div>
+            <span class="item-subtotal">{{ item.subtotal | currencyKes }}</span>
+          </div>
+        }
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Pricing breakdown -->
+      <div class="pricing">
+        <div class="price-row">
+          <span>Subtotal</span>
+          <span>{{ order()!.subtotal | currencyKes }}</span>
+        </div>
+        <div class="price-row">
+          <span>Delivery fee</span>
+          <span [class.free]="order()!.deliveryFee === 0">
+            {{ order()!.deliveryFee === 0 ? 'FREE' : (order()!.deliveryFee | currencyKes) }}
+          </span>
+        </div>
+        @if (order()!.serviceFee) {
+          <div class="price-row">
+            <span>Service fee</span>
+            <span>{{ order()!.serviceFee | currencyKes }}</span>
+          </div>
+        }
+        @if (order()!.discount) {
+          <div class="price-row discount">
+            <span>Discount</span>
+            <span>−{{ order()!.discount | currencyKes }}</span>
+          </div>
+        }
+
+        <mat-divider></mat-divider>
+
+        <div class="price-row total">
+          <span>Total</span>
+          <span>{{ order()!.total | currencyKes }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DELIVERY ADDRESS -->
+    <div class="detail-card">
+      <h2 class="section-title">
+        <mat-icon>location_on</mat-icon>
+        Delivery Address
+      </h2>
+
+      <div class="address-block">
+        <p class="address-line">{{ order()!.deliveryAddress.street }}</p>
+        <p class="address-line muted">
+          {{ order()!.deliveryAddress.area }}, {{ order()!.deliveryAddress.city }}
+        </p>
+        @if (order()!.deliveryAddress.instructions) {
+          <div class="address-note">
+            <mat-icon>info_outline</mat-icon>
+            {{ order()!.deliveryAddress.instructions }}
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- PAYMENT -->
+    <div class="detail-card">
+      <h2 class="section-title">
+        <mat-icon>payment</mat-icon>
+        Payment
+      </h2>
+
+      <div class="payment-row">
+        <div class="payment-method">
+          <mat-icon>
+            {{ order()!.paymentMethod === 'mpesa' ? 'phone_iphone' :
+               order()!.paymentMethod === 'card'  ? 'credit_card' : 'payments' }}
+          </mat-icon>
+          <span>{{ order()!.paymentMethod | titlecase }}</span>
+        </div>
+
+        <div
+          class="payment-status-chip"
+          [class.paid]="order()!.paymentStatus === 'paid'"
+          [class.refunded]="order()!.paymentStatus === 'refunded'">
+          {{ order()!.paymentStatus | titlecase }}
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="actions">
+      @if (isDelivered()) {
+        <button class="primary-btn" (click)="reorder()">
+          <mat-icon>replay</mat-icon>
+          Reorder
+        </button>
+      }
+      <button class="secondary-btn" (click)="goBack()">
+        <mat-icon>list</mat-icon>
+        Back to Orders
+      </button>
+    </div>
+
+  }
+</div>
