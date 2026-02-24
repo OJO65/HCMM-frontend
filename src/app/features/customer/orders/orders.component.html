@@ -1,1 +1,152 @@
-<p>orders works!</p>
+<div class="orders-page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">My Orders</h1>
+      <p class="page-subtitle">Track and manage your orders</p>
+    </div>
+
+    @if (activeOrders().length > 0) {
+      <div class="active-badge">
+        <span class="pulse-dot"></span>
+        {{ activeOrders().length }} active order{{ activeOrders().length !== 1 ? 's' : '' }}
+      </div>
+    }
+  </div>
+
+  <!-- LOADING -->
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="56"></mat-spinner>
+      <p>Loading your orders...</p>
+    </div>
+  }
+
+  @if (!loading()) {
+
+    <!-- STATUS FILTER TABS -->
+    <div class="filter-tabs">
+      <div class="tabs-scroll">
+        @for (tab of filterTabs; track tab.id) {
+          <button
+            class="tab-pill"
+            [class.active]="activeFilter() === tab.id"
+            (click)="setFilter(tab.id)">
+            {{ tab.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ORDERS LIST -->
+    @if (hasResults()) {
+      <div class="orders-list">
+        @for (order of filteredOrders(); track trackByOrderId($index, order)) {
+
+          <article class="order-card" (click)="viewOrder(order.id)">
+
+            <!-- Card Top -->
+            <div class="card-top">
+              <div class="order-meta">
+                <span class="order-id">{{ order.id }}</span>
+                <span class="order-date">{{ order.createdAt | timeAgo }}</span>
+              </div>
+
+              <div
+                class="status-chip"
+                [style.--chip-color]="getStatusConfig(order.status).color">
+                <mat-icon class="chip-icon">{{ getStatusConfig(order.status).icon }}</mat-icon>
+                <span>{{ getStatusConfig(order.status).label }}</span>
+                @if (isActive(order.status)) {
+                  <span class="pulse-dot"></span>
+                }
+              </div>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <!-- Cook Info -->
+            <div class="cook-row">
+              <div class="cook-avatar">
+                <mat-icon>storefront</mat-icon>
+              </div>
+              <div class="cook-info">
+                <span class="cook-name">{{ order.cookName }}</span>
+                <span class="item-count">
+                  {{ order.items.length }} item{{ order.items.length !== 1 ? 's' : '' }}
+                </span>
+              </div>
+              <mat-icon class="chevron">chevron_right</mat-icon>
+            </div>
+
+            <!-- Items Preview -->
+            <div class="items-preview">
+              @for (item of order.items.slice(0, 2); track item.mealId) {
+                <span class="item-pill">{{ item.quantity }}× {{ item.mealName }}</span>
+              }
+              @if (order.items.length > 2) {
+                <span class="item-pill more">+{{ order.items.length - 2 }} more</span>
+              }
+            </div>
+
+            <!-- Card Footer -->
+            <div class="card-footer">
+              <div class="payment-info">
+                <mat-icon class="pay-icon">
+                  {{ order.paymentMethod === 'mpesa' ? 'phone_iphone' :
+                     order.paymentMethod === 'card'  ? 'credit_card' : 'payments' }}
+                </mat-icon>
+                <span class="pay-method">{{ order.paymentMethod | titlecase }}</span>
+              </div>
+
+              <span class="order-total">{{ order.total | currencyKes }}</span>
+            </div>
+
+            <!-- ETA Banner (active orders only) -->
+            @if (isActive(order.status) && order.estimatedDeliveryTime) {
+              <div class="eta-banner">
+                <mat-icon>schedule</mat-icon>
+                <span>Est. arrival: <strong>{{ order.estimatedDeliveryTime | date: 'h:mm a' }}</strong></span>
+              </div>
+            }
+
+          </article>
+
+        }
+      </div>
+    }
+
+    <!-- EMPTY STATE -->
+    @if (!hasResults()) {
+      <div class="empty-state">
+        <div class="empty-illustration">
+          <mat-icon>receipt_long</mat-icon>
+        </div>
+        <h2>
+          @if (activeFilter() === 'all') { No orders yet }
+          @else { No {{ activeFilter() }} orders }
+        </h2>
+        <p>
+          @if (activeFilter() === 'all') {
+            Looks like you haven't placed any orders. Find something delicious!
+          } @else {
+            You don't have any orders with this status.
+          }
+        </p>
+        <div class="empty-actions">
+          @if (activeFilter() !== 'all') {
+            <button class="empty-btn secondary" (click)="setFilter('all')">
+              View All Orders
+            </button>
+          }
+          <button class="empty-btn primary" (click)="browseMore()">
+            <mat-icon>restaurant_menu</mat-icon>
+            Browse Meals
+          </button>
+        </div>
+      </div>
+    }
+
+  }
+</div>
