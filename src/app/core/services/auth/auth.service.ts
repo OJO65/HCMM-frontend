@@ -234,6 +234,15 @@ export class AuthService {
     return this.currentUser()?.role || null;
   }
 
+  changePassword(currentPassword: string, newPassword: string): Observable<{ message: string }> {
+  return this.http
+    .post<{ message: string }>(`${this.apiUrl}/change-password`, {
+      currentPassword,
+      newPassword,
+    })
+    .pipe(catchError((error) => this.handleError(error)));
+}
+
   // ADD THESE METHODS TO YOUR auth.service.ts
 // (Place them at the end of the class, before the closing brace)
 
