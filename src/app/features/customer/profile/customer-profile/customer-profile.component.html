@@ -1,1 +1,495 @@
-<p>customer-profile works!</p>
+<div class="profile-page">
+
+  <!-- ── PROFILE HERO ────────────────────────────────────────────────────── -->
+  <div class="profile-hero">
+    <div class="hero-content">
+
+      <div class="avatar-ring">
+        @if (user()?.avatar) {
+          <img class="avatar-img" [src]="user()!.avatar" [alt]="fullName()" />
+        } @else {
+          <div class="avatar-initials">{{ initials() }}</div>
+        }
+
+        <div class="verified-badge" *ngIf="user()?.isVerified">
+          <mat-icon>verified</mat-icon>
+        </div>
+      </div>
+
+      <div class="hero-info">
+        <h1 class="hero-name">{{ fullName() }}</h1>
+        <p class="hero-email">{{ user()?.email }}</p>
+        <div class="hero-meta">
+          @if (memberSince()) {
+            <span class="meta-chip">
+              <mat-icon>calendar_today</mat-icon>
+              Member since {{ memberSince() | date: 'MMM y' }}
+            </span>
+          }
+          <span class="meta-chip orders" (click)="goToOrders()">
+            <mat-icon>receipt_long</mat-icon>
+            {{ totalOrders() }} order{{ totalOrders() !== 1 ? 's' : '' }}
+          </span>
+        </div>
+      </div>
+
+      <button class="logout-btn" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Sign out</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ── SUCCESS / ERROR TOAST ───────────────────────────────────────────── -->
+  @if (saveSuccess()) {
+    <div class="toast success">
+      <mat-icon>check_circle</mat-icon>
+      {{ saveSuccess() }}
+    </div>
+  }
+  @if (saveError() && !isDialogOpen()) {
+    <div class="toast error">
+      <mat-icon>error</mat-icon>
+      {{ saveError() }}
+    </div>
+  }
+
+  <!-- ── TAB BAR ──────────────────────────────────────────────────────────── -->
+  <div class="tab-bar">
+    <div class="tab-scroll">
+      <button class="tab-btn" [class.active]="activeTab() === 'personal'"    (click)="setTab('personal')">
+        <mat-icon>person</mat-icon>
+        <span>Personal</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'security'"    (click)="setTab('security')">
+        <mat-icon>lock</mat-icon>
+        <span>Security</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'addresses'"   (click)="setTab('addresses')">
+        <mat-icon>location_on</mat-icon>
+        <span>Addresses</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'preferences'" (click)="setTab('preferences')">
+        <mat-icon>tune</mat-icon>
+        <span>Preferences</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── TAB CONTENT ──────────────────────────────────────────────────────── -->
+  <div class="tab-content">
+
+    <!-- ════ PERSONAL INFO ════ -->
+    @if (activeTab() === 'personal') {
+      <div class="content-card" @fadeIn>
+
+        <div class="card-header">
+          <h2 class="card-title">
+            <mat-icon>person_outline</mat-icon>
+            Personal Information
+          </h2>
+          <button class="edit-btn" (click)="openDialog('edit-personal')">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">First Name</span>
+            <span class="info-value">{{ user()?.firstName }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Last Name</span>
+            <span class="info-value">{{ user()?.lastName }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Email</span>
+            <span class="info-value">
+              {{ user()?.email }}
+              @if (user()?.isVerified) {
+                <span class="verified-tag">
+                  <mat-icon>verified</mat-icon>
+                  Verified
+                </span>
+              }
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Phone</span>
+            <span class="info-value">
+              {{ user()?.phone ?? '—' }}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Account Status</span>
+            <span class="info-value">
+              <span class="status-chip" [class.active]="user()?.isActive">
+                {{ user()?.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Member Since</span>
+            <span class="info-value">{{ user()?.createdAt | date: 'MMMM d, y' }}</span>
+          </div>
+        </div>
+
+        <!-- Order history summary -->
+        <mat-divider></mat-divider>
+
+        <div class="orders-summary" (click)="goToOrders()">
+          <div class="summary-left">
+            <div class="summary-icon">
+              <mat-icon>receipt_long</mat-icon>
+            </div>
+            <div>
+              <p class="summary-label">Total Orders</p>
+              <p class="summary-value">{{ totalOrders() }} orders placed</p>
+            </div>
+          </div>
+          <mat-icon class="summary-chevron">chevron_right</mat-icon>
+        </div>
+
+      </div>
+    }
+
+    <!-- ════ SECURITY ════ -->
+    @if (activeTab() === 'security') {
+      <div class="content-card">
+
+        <div class="card-header">
+          <h2 class="card-title">
+            <mat-icon>lock_outline</mat-icon>
+            Security
+          </h2>
+        </div>
+
+        <div class="security-item">
+          <div class="security-info">
+            <p class="security-label">Password</p>
+            <p class="security-sub">Last updated {{ user()?.updatedAt | timeAgo }}</p>
+          </div>
+          <button class="edit-btn" (click)="openDialog('change-password')">
+            <mat-icon>edit</mat-icon>
+            Change
+          </button>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="security-item">
+          <div class="security-info">
+            <p class="security-label">Email Verification</p>
+            <p class="security-sub">{{ user()?.email }}</p>
+          </div>
+          <span class="verified-tag" [class.unverified]="!user()?.isVerified">
+            <mat-icon>{{ user()?.isVerified ? 'verified' : 'warning' }}</mat-icon>
+            {{ user()?.isVerified ? 'Verified' : 'Not Verified' }}
+          </span>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="security-item danger-zone">
+          <div class="security-info">
+            <p class="security-label">Sign Out</p>
+            <p class="security-sub">Sign out of your account on this device</p>
+          </div>
+          <button class="danger-btn" (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            Sign Out
+          </button>
+        </div>
+
+      </div>
+    }
+
+    <!-- ════ ADDRESSES ════ -->
+    @if (activeTab() === 'addresses') {
+      <div class="content-card">
+
+        <div class="card-header">
+          <h2 class="card-title">
+            <mat-icon>location_on</mat-icon>
+            Saved Addresses
+          </h2>
+          <button class="edit-btn primary" (click)="openDialog('add-address')">
+            <mat-icon>add</mat-icon>
+            Add New
+          </button>
+        </div>
+
+        @if (savedAddresses().length === 0) {
+          <div class="empty-section">
+            <mat-icon>location_off</mat-icon>
+            <p>No saved addresses yet.</p>
+            <button class="empty-cta" (click)="openDialog('add-address')">
+              Add your first address
+            </button>
+          </div>
+        }
+
+        <div class="addresses-list">
+          @for (addr of savedAddresses(); track addr.id) {
+            <div class="address-card" [class.default]="addr.isDefault">
+
+              <div class="address-left">
+                <div class="address-icon" [class.default]="addr.isDefault">
+                  <mat-icon>{{ addr.isDefault ? 'home' : 'location_on' }}</mat-icon>
+                </div>
+                <div class="address-info">
+                  <div class="address-top">
+                    <span class="address-label">{{ addr.label ?? 'Address' }}</span>
+                    @if (addr.isDefault) {
+                      <span class="default-badge">Default</span>
+                    }
+                  </div>
+                  <p class="address-text">{{ addr.address }}</p>
+                </div>
+              </div>
+
+              <div class="address-actions">
+                @if (!addr.isDefault) {
+                  <button class="icon-btn" (click)="setDefaultAddress(addr.id)"
+                    matTooltip="Set as default">
+                    <mat-icon>star_border</mat-icon>
+                  </button>
+                }
+                <button class="icon-btn" (click)="openDialog('edit-address', addr)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button class="icon-btn danger" (click)="removeAddress(addr.id)">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+
+            </div>
+          }
+        </div>
+
+      </div>
+    }
+
+    <!-- ════ PREFERENCES ════ -->
+    @if (activeTab() === 'preferences') {
+      <div class="content-card">
+
+        <div class="card-header">
+          <h2 class="card-title">
+            <mat-icon>tune</mat-icon>
+            Dietary Preferences
+          </h2>
+        </div>
+
+        <p class="pref-hint">
+          Select your dietary preferences to get better meal recommendations.
+        </p>
+
+        <div class="dietary-chips">
+          @for (tag of dietaryOptions; track tag) {
+            <button
+              class="dietary-chip"
+              [class.active]="isDietaryActive(tag)"
+              (click)="toggleDietary(tag)"
+              [attr.aria-pressed]="isDietaryActive(tag)">
+              {{ tag }}
+            </button>
+          }
+        </div>
+
+        <div class="pref-footer">
+          <button class="save-btn" (click)="saveDietary()" [disabled]="saving()">
+            @if (saving()) {
+              <mat-spinner diameter="18"></mat-spinner>
+            } @else {
+              <mat-icon>save</mat-icon>
+            }
+            Save Preferences
+          </button>
+        </div>
+
+      </div>
+    }
+
+  </div><!-- /tab-content -->
+
+</div><!-- /profile-page -->
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     DIALOGS
+════════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Edit Personal Info -->
+@if (activeDialog() === 'edit-personal') {
+  <div class="dialog-backdrop" (click)="closeOnBackdrop($event)">
+    <div class="dialog">
+
+      <div class="dialog-header">
+        <h3>Edit Personal Info</h3>
+        <button class="dialog-close" (click)="closeDialog()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <form class="dialog-body" [formGroup]="personalForm">
+
+        <mat-form-field appearance="outline">
+          <mat-label>First Name</mat-label>
+          <input matInput formControlName="firstName" />
+          @if (getFieldError(personalForm, 'firstName')) {
+            <mat-error>{{ getFieldError(personalForm, 'firstName') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Last Name</mat-label>
+          <input matInput formControlName="lastName" />
+          @if (getFieldError(personalForm, 'lastName')) {
+            <mat-error>{{ getFieldError(personalForm, 'lastName') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Phone Number</mat-label>
+          <input matInput formControlName="phone" placeholder="+254..." />
+          @if (getFieldError(personalForm, 'phone')) {
+            <mat-error>{{ getFieldError(personalForm, 'phone') }}</mat-error>
+          }
+        </mat-form-field>
+
+        @if (saveError()) {
+          <div class="dialog-error">
+            <mat-icon>error</mat-icon>
+            {{ saveError() }}
+          </div>
+        }
+
+      </form>
+
+      <div class="dialog-footer">
+        <button class="secondary-btn" (click)="closeDialog()">Cancel</button>
+        <button class="primary-btn" (click)="savePersonal()" [disabled]="saving()">
+          @if (saving()) { <mat-spinner diameter="18"></mat-spinner> }
+          @else { <mat-icon>save</mat-icon> }
+          Save Changes
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- Change Password -->
+@if (activeDialog() === 'change-password') {
+  <div class="dialog-backdrop" (click)="closeOnBackdrop($event)">
+    <div class="dialog">
+
+      <div class="dialog-header">
+        <h3>Change Password</h3>
+        <button class="dialog-close" (click)="closeDialog()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <form class="dialog-body" [formGroup]="passwordForm">
+
+        <mat-form-field appearance="outline">
+          <mat-label>Current Password</mat-label>
+          <input matInput type="password" formControlName="currentPassword" />
+          @if (getFieldError(passwordForm, 'currentPassword')) {
+            <mat-error>{{ getFieldError(passwordForm, 'currentPassword') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>New Password</mat-label>
+          <input matInput type="password" formControlName="newPassword" />
+          @if (getFieldError(passwordForm, 'newPassword')) {
+            <mat-error>{{ getFieldError(passwordForm, 'newPassword') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Confirm New Password</mat-label>
+          <input matInput type="password" formControlName="confirmPassword" />
+          @if (passwordForm.errors?.['mismatch'] && passwordForm.get('confirmPassword')?.touched) {
+            <mat-error>Passwords do not match.</mat-error>
+          }
+        </mat-form-field>
+
+        @if (saveError()) {
+          <div class="dialog-error">
+            <mat-icon>error</mat-icon>
+            {{ saveError() }}
+          </div>
+        }
+
+      </form>
+
+      <div class="dialog-footer">
+        <button class="secondary-btn" (click)="closeDialog()">Cancel</button>
+        <button class="primary-btn" (click)="savePassword()" [disabled]="saving()">
+          @if (saving()) { <mat-spinner diameter="18"></mat-spinner> }
+          @else { <mat-icon>lock</mat-icon> }
+          Update Password
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- Add / Edit Address -->
+@if (activeDialog() === 'add-address' || activeDialog() === 'edit-address') {
+  <div class="dialog-backdrop" (click)="closeOnBackdrop($event)">
+    <div class="dialog">
+
+      <div class="dialog-header">
+        <h3>{{ editingAddress() ? 'Edit Address' : 'Add Address' }}</h3>
+        <button class="dialog-close" (click)="closeDialog()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <form class="dialog-body" [formGroup]="addressForm">
+
+        <mat-form-field appearance="outline">
+          <mat-label>Label (e.g. Home, Work)</mat-label>
+          <input matInput formControlName="label" />
+          @if (getFieldError(addressForm, 'label')) {
+            <mat-error>{{ getFieldError(addressForm, 'label') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Full Address</mat-label>
+          <textarea matInput formControlName="address" rows="3"
+            placeholder="Street, area, city..."></textarea>
+          @if (getFieldError(addressForm, 'address')) {
+            <mat-error>{{ getFieldError(addressForm, 'address') }}</mat-error>
+          }
+        </mat-form-field>
+
+        @if (saveError()) {
+          <div class="dialog-error">
+            <mat-icon>error</mat-icon>
+            {{ saveError() }}
+          </div>
+        }
+
+      </form>
+
+      <div class="dialog-footer">
+        <button class="secondary-btn" (click)="closeDialog()">Cancel</button>
+        <button class="primary-btn" (click)="saveAddress()" [disabled]="saving()">
+          @if (saving()) { <mat-spinner diameter="18"></mat-spinner> }
+          @else { <mat-icon>save</mat-icon> }
+          {{ editingAddress() ? 'Save Changes' : 'Add Address' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
